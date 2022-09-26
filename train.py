@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix, f1_score
 from sklearn.model_selection import StratifiedKFold
 
 from data_generator import get_all_data
-from models import create_cnn_model
+from models import create_cnn_model, create_vit_classifier
 
 
 def lr_schedule(epoch, lr):
@@ -16,7 +16,7 @@ def lr_schedule(epoch, lr):
 
 
 if __name__ == "__main__":
-    X, y = get_all_data(r"C:\Data\preprocessed_old")
+    X, y = get_all_data(r"C:\Data\preprocessed_filtered")
     y = keras.utils.to_categorical(y, num_classes=2)
     kfold = StratifiedKFold(n_splits=5, shuffle=True)
 
@@ -27,13 +27,13 @@ if __name__ == "__main__":
 
 for train, test in kfold.split(X, y.argmax(1)):
     model = create_cnn_model()
-    model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=['accuracy'])
+    opt = keras.optimizers.Adam()
+    model.compile(optimizer=opt, loss="categorical_crossentropy", metrics=['accuracy'])
 
     lr_scheduler = LearningRateScheduler(lr_schedule)
     early_stopper = EarlyStopping(patience=10, restore_best_weights=True)
-    history = model.fit(x=X[train], y=y[train], batch_size=128, epochs=100, validation_split=0.1,
-                        callbacks=[early_stopper, lr_scheduler])
-
+    history = model.fit(x=X[train], y=y[train], batch_size=128, epochs=100, validation_split=0.1)
+    # callbacks = [early_stopper, lr_scheduler
     loss, accuracy = model.evaluate(X[test], y[test])
     y_score = model.predict(X[test])
     y_predict = np.argmax(y_score, axis=-1)

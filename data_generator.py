@@ -39,7 +39,7 @@ def get_all_data(root_dir):
     shuffle(file_list)
     length = len(file_list)
 
-    X = np.empty((length, SIGNAL_LENGTH, 1))
+    X = np.empty((length, 3000, 1))
     y = np.empty(length, dtype=float)
 
     for i in range(length):
@@ -47,7 +47,7 @@ def get_all_data(root_dir):
             print("Read sample: " + str(i))
         path = root_dir + '/' + file_list[i]
         tmp = np.load(path)
-        X[i, :, 0] = np.squeeze(tmp['data']) * SIGNAL_SCALE
+        X[i, :, 0] = (np.squeeze(tmp['data']) * SIGNAL_SCALE)
         y[i] = tmp['labels']
 
     return X, y

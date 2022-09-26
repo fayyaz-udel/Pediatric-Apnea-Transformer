@@ -5,13 +5,13 @@ import sleep_study as ss
 import numpy as np
 import mne
 import random
+import math
 
-
-NUM_WORKER = 6
+NUM_WORKER = 8
 SN = 3984 # STUDY NUMBER
 FREQ = 100
 CHUNK_DURATION = 30.0
-OUT_FOLDER = r'C:\Data\preprocessed'
+OUT_FOLDER = r'C:\Data\preprocessed_filtered'
 channels = [
     'ECG EKG2-EKG',
 ]
@@ -68,17 +68,27 @@ def preprocess(i, annotation_modifier, EVENT_DICT, out_dir, postfix, rnd):
     tmax = CHUNK_DURATION - 1. / sfreq
     epochs = mne.Epochs(raw=raw, picks=channels, events=events, event_id=event_ids, tmin=0., tmax=tmax,
                         baseline=None, verbose=None)
+
+    if rnd:
+        length = events.shape[0]
+        keep_idxs = random.sample(range(length), math.floor(length/rnd))
+        mask = [True] * length
+        for i in keep_idxs:
+            mask[i] = False
+        epochs.drop(mask)
+
     epochs.load_data()
-    epochs = epochs.resample(FREQ, npad='auto')
+    epochs = epochs.filter(3.0, 45.0, n_jobs=4)
+    epochs = epochs.resample(FREQ, npad='auto', n_jobs=4)
     data = epochs.get_data()
     labels = events[:, -1]
 
-    c = 0
+    if rnd:
+        labels = [labels[i] for i in keep_idxs]
+
     for i in range(data.shape[0]):
-        if random.randint(0, rnd) == 0:
-            np.savez_compressed(out_dir + '\\' + study + postfix + str(i), data=data[i], labels=labels[i])
-            c += 1
-    return c
+        np.savez_compressed(out_dir + '\\' + study + postfix + str(i), data=data[i], labels=labels[i])
+    return data.shape[0]
 
 
 if __name__ == "__main__":
