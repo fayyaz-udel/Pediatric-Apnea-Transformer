@@ -4,7 +4,7 @@ import numpy as np
 import keras
 
 SIGNAL_LENGTH = 3000
-SIGNAL_SCALE = 500
+SIGNAL_SCALE = 50000
 
 
 class DataGenerator(keras.utils.Sequence):
@@ -47,7 +47,7 @@ def get_all_data(root_dir):
             print("Read sample: " + str(i))
         path = root_dir + '/' + file_list[i]
         tmp = np.load(path)
-        X[i, :, 0] = (np.squeeze(tmp['data']) * SIGNAL_SCALE)
+        X[i, :, 0] = np.squeeze(tmp['data']) * SIGNAL_SCALE #(np.squeeze((tmp['data'] - tmp['data'].min()) / (tmp['data'].max() - tmp['data'].min())))
         y[i] = tmp['labels']
 
     return X, y

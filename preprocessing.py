@@ -11,7 +11,7 @@ NUM_WORKER = 8
 SN = 3984 # STUDY NUMBER
 FREQ = 100
 CHUNK_DURATION = 30.0
-OUT_FOLDER = r'C:\Data\preprocessed_filtered'
+OUT_FOLDER = r'C:\Data\preprocessed_all'
 channels = [
     'ECG EKG2-EKG',
 ]
@@ -29,15 +29,17 @@ POS_EVENT_DICT = {
 
 NEG_EVENT_DICT = {
     'Sleep stage N1': 0,
-    'Sleep stage N2': 0,
-    'Sleep stage N3': 0,
-    'Sleep stage R': 0,
+    'Sleep stage N2': 1,
+    'Sleep stage N3': 2,
+    'Sleep stage R': 3,
 }
 
 
 mne.set_log_file('log.txt', overwrite=False)
 
 
+def identity(df):
+    return df
 def apnea2bad(df):
     df = df.replace(r'.*pnea.*', 'badevent', regex=True)
     print("bad replaced!")
@@ -101,5 +103,7 @@ if __name__ == "__main__":
 
     else:
         with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_WORKER) as executor:
-            executor.map(preprocess, range(SN), [change_duration] * SN, [POS_EVENT_DICT] * SN, [OUT_FOLDER] * SN, ["abnorm"] * SN, [0] * SN)
-            executor.map(preprocess, range(SN), [apnea2bad] * SN, [NEG_EVENT_DICT] * SN, [OUT_FOLDER] * SN, ["norm"] * SN, [100] * SN)
+            # executor.map(preprocess, range(SN), [change_duration] * SN, [POS_EVENT_DICT] * SN, [OUT_FOLDER] * SN, ["abnorm"] * SN, [0] * SN)
+            # executor.map(preprocess, range(SN), [apnea2bad] * SN, [NEG_EVENT_DICT] * SN, [OUT_FOLDER] * SN, ["norm"] * SN, [100] * SN)
+            executor.map(preprocess, range(SN), [identity] * SN, [NEG_EVENT_DICT] * SN, [OUT_FOLDER] * SN,
+                         [""] * SN, [0] * SN)

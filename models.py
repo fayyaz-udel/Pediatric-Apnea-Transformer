@@ -1,7 +1,7 @@
 import keras
 import tensorflow as tf
 from keras import layers
-from keras.layers import Conv1D, MaxPooling1D
+from keras.layers import Conv1D, MaxPooling1D, Reshape, BatchNormalization
 from keras.layers import Dense, Flatten, LSTM, Bidirectional
 from keras.models import Sequential
 
@@ -9,18 +9,18 @@ p = 30 # patch numbers
 l = 100
 
 num_classes = 2
-input_shape = (p, l)
+input_shape = (p * l, 1)
 image_size = p * l
 patch_size = l
 num_patches = p
-projection_dim = 256
-num_heads = 16
+projection_dim = 64
+num_heads = 4
 transformer_units = [
     projection_dim * 2,
     projection_dim,
 ]  # Size of the transformer layers
-transformer_layers = 2
-mlp_head_units = [512, 128]  # Size of the dense layers of the final classifier
+transformer_layers = 1
+mlp_head_units = [128, 64, 32]  # [2048, 1024] Size of the dense layers of the final classifier
 
 
 ########################################################################################################################
@@ -49,7 +49,16 @@ class PatchEncoder(layers.Layer):
 
 def create_vit_classifier():
     inputs = layers.Input(shape=input_shape)
-    encoded_patches = PatchEncoder(num_patches, projection_dim)(inputs)
+    conved1 = Conv1D(16, kernel_size=50, activation="relu", padding='same')(inputs)
+    conved12 = BatchNormalization()(conved1)
+    conved11 = MaxPooling1D(pool_size=5)(conved12)
+    conved22 = Conv1D(32, kernel_size=20, activation="relu", padding='same')(conved11)
+    conved23 = BatchNormalization()(conved22)
+    conved55 = MaxPooling1D(pool_size=5)(conved23)
+    conv66 = Conv1D(64, kernel_size=10, activation="relu", padding='same')(conved55)
+
+    reshaped = Reshape((30, 4 * 64), input_shape=(120, 64))(conv66)
+    encoded_patches = PatchEncoder(num_patches, projection_dim)(reshaped)
 
     # Create multiple layers of the Transformer block.
     for _ in range(transformer_layers):
@@ -57,8 +66,7 @@ def create_vit_classifier():
         x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
         # Create a multi-head attention layer.
         attention_output = layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=projection_dim, dropout=0.1
-        )(x1, x1)
+            num_heads=num_heads, key_dim=projection_dim, dropout=0.1)(x1, x1)
         # Skip connection 1.
         x2 = layers.Add()([attention_output, encoded_patches])
         # Layer normalization 2.
@@ -75,14 +83,14 @@ def create_vit_classifier():
     # Add MLP.
     features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.1) #change
     # Classify outputs.
-    logits = layers.Dense(num_classes)(features)
+    logits = layers.Dense(num_classes, activation='softmax')(features)
     # Create the Keras model.
     return keras.Model(inputs=inputs, outputs=logits)
 
 
 def create_cnn_model():
     model = Sequential()
-    model.add(Conv1D(16, kernel_size=50, activation="relu"))
+    model.add(Conv1D(32, kernel_size=50, activation="relu"))
     model.add(MaxPooling1D(pool_size=10))
     model.add(Conv1D(32, kernel_size=20, activation="relu"))
     model.add(MaxPooling1D(pool_size=5))

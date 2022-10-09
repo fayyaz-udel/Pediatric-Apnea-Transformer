@@ -3,14 +3,13 @@ import numpy as np
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from sklearn.metrics import confusion_matrix, f1_score
 from sklearn.model_selection import StratifiedKFold
-
 from data_generator import get_all_data
 from models import create_cnn_model, create_vit_classifier
 
 
 def lr_schedule(epoch, lr):
-    if epoch > 20 and (epoch - 1) % 5 == 0:
-        lr *= 0.5
+    if epoch > 30 and (epoch - 1) % 5 == 0:
+        lr *= 0.25
     print("Learning rate: ", lr)
     return lr
 
@@ -25,15 +24,15 @@ if __name__ == "__main__":
     SP = []
     F2 = []
 
-for train, test in kfold.split(X, y.argmax(1)):
+for train, test in kfold.split(X,    y.argmax(1)):
     model = create_cnn_model()
+
     opt = keras.optimizers.Adam()
-    model.compile(optimizer=opt, loss="categorical_crossentropy", metrics=['accuracy'])
+    model.compile(optimizer=opt, loss=keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
     lr_scheduler = LearningRateScheduler(lr_schedule)
-    early_stopper = EarlyStopping(patience=10, restore_best_weights=True)
-    history = model.fit(x=X[train], y=y[train], batch_size=128, epochs=100, validation_split=0.1)
-    # callbacks = [early_stopper, lr_scheduler
+    early_stopper = EarlyStopping(patience=20, restore_best_weights=True, monitor='val_accuracy')
+    history = model.fit(x=X[train], y=y[train], batch_size=256, epochs=100, validation_split=0.1, callbacks = [early_stopper, lr_scheduler])
     loss, accuracy = model.evaluate(X[test], y[test])
     y_score = model.predict(X[test])
     y_predict = np.argmax(y_score, axis=-1)
