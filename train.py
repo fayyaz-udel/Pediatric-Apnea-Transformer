@@ -1,38 +1,46 @@
+import pickle
+
 import keras
 import numpy as np
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from sklearn.metrics import confusion_matrix, f1_score
 from sklearn.model_selection import StratifiedKFold
 from data_generator import get_all_data
-from models import create_cnn_model, create_vit_classifier
+from models import create_cnn_model, create_vit_classifier, create_fc_model, create_model
 
 
 def lr_schedule(epoch, lr):
-    if epoch > 30 and (epoch - 1) % 5 == 0:
-        lr *= 0.25
+    if epoch > 50 and (epoch - 5) % 10 == 0:
+        lr *= 0.5
     print("Learning rate: ", lr)
     return lr
 
 
 if __name__ == "__main__":
-    X, y = get_all_data(r"C:\Data\preprocessed_filtered")
+    # X, y = get_all_data(r"C:\Data\preprocessed_three")
+    # with open('objs_three.pkl', 'wb') as f:
+    #     pickle.dump([X, y], f)
+
+    with open('objs_three.pkl', 'rb') as f:
+        X, y = pickle.load(f)
+
     y = keras.utils.to_categorical(y, num_classes=2)
     kfold = StratifiedKFold(n_splits=5, shuffle=True)
-
     ACC = []
     SN = []
     SP = []
     F2 = []
 
-for train, test in kfold.split(X,    y.argmax(1)):
-    model = create_cnn_model()
+for train, test in kfold.split(X, y.argmax(1)):
+    model = create_vit_classifier()
 
     opt = keras.optimizers.Adam()
     model.compile(optimizer=opt, loss=keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
 
     lr_scheduler = LearningRateScheduler(lr_schedule)
-    early_stopper = EarlyStopping(patience=20, restore_best_weights=True, monitor='val_accuracy')
-    history = model.fit(x=X[train], y=y[train], batch_size=256, epochs=100, validation_split=0.1, callbacks = [early_stopper, lr_scheduler])
+    early_stopper = EarlyStopping(patience=50, restore_best_weights=True)
+    history = model.fit(x=X[train], y=y[train], batch_size=256, epochs=500, validation_split=0.1,
+                        callbacks=[early_stopper, lr_scheduler])
     loss, accuracy = model.evaluate(X[test], y[test])
     y_score = model.predict(X[test])
     y_predict = np.argmax(y_score, axis=-1)
@@ -49,6 +57,11 @@ for train, test in kfold.split(X,    y.argmax(1)):
     SP.append(sp * 100)
     F2.append(f1 * 100)
 
+
+print(ACC)
+print(SN)
+print(SP)
+print(F2)
 print("Accuracy: %.2f -+ %.3f" % (np.mean(ACC), np.std(ACC)))
 print("Sensitivity: %.2f -+ %.3f" % (np.mean(SN), np.std(SN)))
 print("Specifity: %.2f -+ %.3f" % (np.mean(SP), np.std(SP)))

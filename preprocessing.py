@@ -11,9 +11,11 @@ NUM_WORKER = 8
 SN = 3984 # STUDY NUMBER
 FREQ = 100
 CHUNK_DURATION = 30.0
-OUT_FOLDER = r'C:\Data\preprocessed_all'
+OUT_FOLDER = r'C:\Data\preprocessed_three'
 channels = [
     'ECG EKG2-EKG',
+    'RESP PTAF',
+    'SPO2',
 ]
 
 POS_EVENT_DICT = {
@@ -29,9 +31,9 @@ POS_EVENT_DICT = {
 
 NEG_EVENT_DICT = {
     'Sleep stage N1': 0,
-    'Sleep stage N2': 1,
-    'Sleep stage N3': 2,
-    'Sleep stage R': 3,
+    'Sleep stage N2': 0,
+    'Sleep stage N3': 0,
+    'Sleep stage R': 0,
 }
 
 
@@ -80,7 +82,7 @@ def preprocess(i, annotation_modifier, EVENT_DICT, out_dir, postfix, rnd):
         epochs.drop(mask)
 
     epochs.load_data()
-    epochs = epochs.filter(3.0, 45.0, n_jobs=4)
+    #epochs = epochs.filter(3.0, 45.0, n_jobs=4)
     epochs = epochs.resample(FREQ, npad='auto', n_jobs=4)
     data = epochs.get_data()
     labels = events[:, -1]
@@ -103,7 +105,8 @@ if __name__ == "__main__":
 
     else:
         with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_WORKER) as executor:
-            # executor.map(preprocess, range(SN), [change_duration] * SN, [POS_EVENT_DICT] * SN, [OUT_FOLDER] * SN, ["abnorm"] * SN, [0] * SN)
-            # executor.map(preprocess, range(SN), [apnea2bad] * SN, [NEG_EVENT_DICT] * SN, [OUT_FOLDER] * SN, ["norm"] * SN, [100] * SN)
-            executor.map(preprocess, range(SN), [identity] * SN, [NEG_EVENT_DICT] * SN, [OUT_FOLDER] * SN,
-                         [""] * SN, [0] * SN)
+            executor.map(preprocess, range(SN), [change_duration] * SN, [POS_EVENT_DICT] * SN, [OUT_FOLDER] * SN, ["abnorm"] * SN, [0] * SN)
+            executor.map(preprocess, range(SN), [apnea2bad] * SN, [NEG_EVENT_DICT] * SN, [OUT_FOLDER] * SN, ["norm"] * SN, [100] * SN)
+
+            # Uncomment it if you want all signals regardless
+            #executor.map(preprocess, range(SN), [identity] * SN, [NEG_EVENT_DICT] * SN, [OUT_FOLDER] * SN,[""] * SN, [0] * SN)

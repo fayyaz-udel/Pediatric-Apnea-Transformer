@@ -1,26 +1,26 @@
 import keras
 import tensorflow as tf
 from keras import layers
-from keras.layers import Conv1D, MaxPooling1D, Reshape, BatchNormalization
-from keras.layers import Dense, Flatten, LSTM, Bidirectional
+from keras.layers import Conv1D, MaxPooling1D, Reshape, BatchNormalization, GRU
+from keras.layers import Dense, Flatten, LSTM, Bidirectional, UpSampling1D
 from keras.models import Sequential
 
-p = 30 # patch numbers
-l = 100
-
+p = 90  # patch numbers
+l = 1
+ch = 4
 num_classes = 2
-input_shape = (p * l, 1)
+input_shape = (p * l, ch)
 image_size = p * l
 patch_size = l
 num_patches = p
-projection_dim = 64
-num_heads = 4
+projection_dim = 4 #16
+num_heads = 8
 transformer_units = [
     projection_dim * 2,
     projection_dim,
 ]  # Size of the transformer layers
-transformer_layers = 1
-mlp_head_units = [128, 64, 32]  # [2048, 1024] Size of the dense layers of the final classifier
+transformer_layers = 3
+mlp_head_units = [1024, 256]  # [2048, 1024] Size of the dense layers of the final classifier
 
 
 ########################################################################################################################
@@ -49,15 +49,9 @@ class PatchEncoder(layers.Layer):
 
 def create_vit_classifier():
     inputs = layers.Input(shape=input_shape)
-    conved1 = Conv1D(16, kernel_size=50, activation="relu", padding='same')(inputs)
-    conved12 = BatchNormalization()(conved1)
-    conved11 = MaxPooling1D(pool_size=5)(conved12)
-    conved22 = Conv1D(32, kernel_size=20, activation="relu", padding='same')(conved11)
-    conved23 = BatchNormalization()(conved22)
-    conved55 = MaxPooling1D(pool_size=5)(conved23)
-    conv66 = Conv1D(64, kernel_size=10, activation="relu", padding='same')(conved55)
 
-    reshaped = Reshape((30, 4 * 64), input_shape=(120, 64))(conv66)
+    reshaped = Reshape((p, -1))(inputs)
+
     encoded_patches = PatchEncoder(num_patches, projection_dim)(reshaped)
 
     # Create multiple layers of the Transformer block.
@@ -79,9 +73,9 @@ def create_vit_classifier():
     # Create a [batch_size, projection_dim] tensor.
     representation = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
     representation = layers.Flatten()(representation)
-    representation = layers.Dropout(0.1)(representation) #change
+    representation = layers.Dropout(0.1)(representation)  # change
     # Add MLP.
-    features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.1) #change
+    features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.5)  # change
     # Classify outputs.
     logits = layers.Dense(num_classes, activation='softmax')(features)
     # Create the Keras model.
@@ -90,16 +84,61 @@ def create_vit_classifier():
 
 def create_cnn_model():
     model = Sequential()
-    model.add(Conv1D(32, kernel_size=50, activation="relu"))
-    model.add(MaxPooling1D(pool_size=10))
-    model.add(Conv1D(32, kernel_size=20, activation="relu"))
-    model.add(MaxPooling1D(pool_size=5))
-    model.add(Conv1D(64, kernel_size=10, activation="relu"))
+    model.add(Conv1D(32, kernel_size=8, activation="relu", padding='same', name='l1'))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Conv1D(32, kernel_size=4, activation="relu", padding='same', name='l2'))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Conv1D(64, kernel_size=2, activation="relu", padding='same', name='l3'))
 
-    model.add(Bidirectional(LSTM(128, return_sequences=True)))
+    model.add(Bidirectional(LSTM(64, return_sequences=True)))
     model.add(Flatten())
     model.add(Dense(64, activation="relu"))
     model.add(Dense(32, activation="relu"))
     model.add(Dense(2, activation="softmax"))
 
     return model
+
+
+def create_fc_model():
+    model = Sequential()
+    model.add(Dense(128, activation='relu'))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dense(2, activation="softmax"))
+
+    return model
+
+
+def create_model():
+    model = Sequential()
+    model.add(GRU(128, return_sequences=True))
+    model.add(GRU(32, return_sequences=True))
+    model.add(GRU(8, return_sequences=True))
+
+    model.add(Flatten())
+    model.add(Dense(8, activation="relu"))
+    model.add(Dense(2, activation="softmax"))
+
+    return model
+
+
+def create_ed_cnn_model():
+    model = Sequential()
+    model.add(Conv1D(16, kernel_size=50, activation="relu", padding='same', name='l1'))
+    model.add(MaxPooling1D(pool_size=10))
+    model.add(Conv1D(32, kernel_size=20, activation="relu", padding='same', name='l2'))
+    model.add(MaxPooling1D(pool_size=5))
+    model.add(Conv1D(64, kernel_size=10, activation="relu", padding='same', name='l3'))
+
+    model.add(UpSampling1D(size=10))
+    model.add(Conv1D(8, kernel_size=10, activation="relu", padding='same'))
+    model.add(UpSampling1D(size=5))
+    model.add(Conv1D(1, kernel_size=10, activation="relu", padding='same'))
+
+    return model
+
+
+if __name__ == "__main__":
+    model = create_fc_model()
+    model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+    model.build(input_shape=(None, 3000, 1))
+    model.summary()
