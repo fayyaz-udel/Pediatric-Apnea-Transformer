@@ -1,18 +1,24 @@
+from sklearn import svm
+import numpy as np
 import pickle
 
-import keras
-import numpy as np
-from keras.callbacks import LearningRateScheduler, EarlyStopping
-from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score, confusion_matrix
+from sklearn.neural_network import MLPClassifier
 
-from models import create_vit_classifier, create_baseline_model
+MODEL_NAME = "MLP"
 
 
-def lr_schedule(epoch, lr):
-    if epoch > 50 and (epoch - 5) % 10 == 0:
-        lr *= 0.5
-    print("Learning rate: ", lr)
-    return lr
+def select_model(model_name):
+    if model_name == "GB":
+        return GradientBoostingClassifier()
+    if model_name == "LR":
+        return LogisticRegression()
+    if model_name == "SVM":
+        return svm.SVC()
+    if model_name == "MLP":
+        return MLPClassifier(hidden_layer_sizes=(128, 32, 8))
 
 
 if __name__ == "__main__":
@@ -28,7 +34,7 @@ if __name__ == "__main__":
     # with open('objs_foldPat.pkl', 'wb') as f:
     #      pickle.dump([x, y], f)
 
-    with open('objs_foldPat.pkl', 'rb') as f:
+    with open(r'..\objs_foldPat.pkl', 'rb') as f:
         x, y = pickle.load(f)
 
     ACC = []
@@ -52,36 +58,33 @@ for fold in range(5):
                 x_train = np.concatenate((x_train, x[i]))
                 y_train = np.concatenate((y_train, y[i]))
 
-    y_train = keras.utils.to_categorical(y_train, num_classes=2)
-    y_test = keras.utils.to_categorical(y_test, num_classes=2)
+    # y_train = keras.utils.to_categorical(y_train, num_classes=2)
+    # y_test = keras.utils.to_categorical(y_test, num_classes=2)
 
-    model = create_vit_classifier()
-    #model = create_baseline_model("LSTM")
+    x_train_flatten = np.reshape(x_train, (x_train.shape[0], x_train.shape[1] * x_train.shape[2]))
+    x_test_flatten = np.reshape(x_test, (x_test.shape[0], x_test.shape[1] * x_test.shape[2]))
 
-    opt = keras.optimizers.Adam()
-    model.compile(optimizer=opt, loss=keras.losses.CategoricalCrossentropy(), metrics=['accuracy'])
+    model = select_model(MODEL_NAME)
+    model = model.fit(x_train_flatten, y_train)
 
-    lr_scheduler = LearningRateScheduler(lr_schedule)
-    early_stopper = EarlyStopping(patience=50, restore_best_weights=True)
-    # history = model.fit(x=x_train, y=y_train, batch_size=256, epochs=20, validation_split=0.1)
-    history = model.fit(x=x_train, y=y_train, batch_size=256, epochs=500, validation_split=0.1,
-                       callbacks=[early_stopper, lr_scheduler])
-    loss, accuracy = model.evaluate(x_test, y_test)
-    y_score = model.predict(x_test)
-    y_predict = np.argmax(y_score, axis=-1)
-    y_training = np.argmax(y_test, axis=-1)
+    y_predict = model.predict(x_test_flatten)
+    # loss, accuracy = model.evaluate(x_test, y_test)
+    # y_score = model.predict(x_test)
+    # y_predict = np.argmax(y_score, axis=-1)
+    # y_training = np.argmax(y_test, axis=-1)
 
     # Confusion matrix:
-    C = confusion_matrix(y_training, y_predict, labels=(1, 0))
+    C = confusion_matrix(y_test, y_predict, labels=(1, 0))
     TP, TN, FP, FN = C[0, 0], C[1, 1], C[1, 0], C[0, 1]
     acc, sn, sp = 1. * (TP + TN) / (TP + TN + FP + FN), 1. * TP / (TP + FN), 1. * TN / (TN + FP)
-    f1 = f1_score(y_training, y_predict)
+    f1 = f1_score(y_test, y_predict)
 
     ACC.append(acc * 100)
     SN.append(sn * 100)
     SP.append(sp * 100)
     F2.append(f1 * 100)
 
+print("========================== " + MODEL_NAME + "==========================")
 print(ACC)
 print(SN)
 print(SP)

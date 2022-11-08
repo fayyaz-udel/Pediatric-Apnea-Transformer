@@ -48,7 +48,8 @@ def get_all_data(root_dir):
     X = np.empty((length, 90, CHANNELS_NO))
     y = np.empty(length, dtype=float)
 
-    scaler = lambda arr: arr # * SIGNAL_SCALE #(arr - np.min(arr)) / (np.max(arr) - np.min(arr))
+    bad_idx = []
+    scaler = lambda arr: arr  # * SIGNAL_SCALE #(arr - np.min(arr)) / (np.max(arr) - np.min(arr))
     ir = 3  # INTERPOLATION RATE(3HZ)
     tm = np.arange(0, 30, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION
 
@@ -64,6 +65,7 @@ def get_all_data(root_dir):
 
         if len(rpeaks) < 15 or len(rpeaks) > 100:
             print(len(rpeaks))
+            bad_idx.append(i)
             continue
         rri_tm, rri_signal = rpeaks[1:] / float(IN_FREQ), np.diff(rpeaks) / float(IN_FREQ)
         # rri_signal = medfilt(rri_signal, kernel_size=3)
@@ -72,13 +74,15 @@ def get_all_data(root_dir):
         amp_interp_signal = splev(tm, splrep(ampl_tm, scaler(ampl_signal), k=3), ext=1)
         X[i, :, 0] = rri_interp_signal
         X[i, :, 1] = amp_interp_signal
-        X[i, :, 2] = np.interp(np.arange(0, SIGNAL_LENGTH, 33.34), np.arange(0, SIGNAL_LENGTH), tmp['data'][1]) * SIGNAL_SCALE
-        X[i, :, 3] = np.interp(np.arange(0, SIGNAL_LENGTH, 33.34), np.arange(0, SIGNAL_LENGTH), tmp['data'][2]) - 80
+        X[i, :, 2] = np.interp(np.arange(0, SIGNAL_LENGTH, 33.34), np.arange(0, SIGNAL_LENGTH),
+                                                 tmp['data'][1]) * SIGNAL_SCALE
+        X[i, :, 3] = np.interp(np.arange(0, SIGNAL_LENGTH, 33.34), np.arange(0, SIGNAL_LENGTH),
+                                                 tmp['data'][2]) - 80
 
         # X[i, :, 0] = np.squeeze(tmp['data']) * SIGNAL_SCALE #(np.squeeze((tmp['data'] - tmp['data'].min()) / (tmp['data'].max() - tmp['data'].min())))
         y[i] = tmp['labels']
 
-    return X, y
+    return np.delete(X, bad_idx, 0), np.delete(y, bad_idx, 0)
 
 
 if __name__ == "__main__":

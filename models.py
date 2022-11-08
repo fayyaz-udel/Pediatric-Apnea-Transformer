@@ -13,8 +13,8 @@ input_shape = (p * l, ch)
 image_size = p * l
 patch_size = l
 num_patches = p
-projection_dim = 4 #16
-num_heads = 8
+projection_dim = 16 #16
+num_heads = 4
 transformer_units = [
     projection_dim * 2,
     projection_dim,
@@ -60,20 +60,20 @@ def create_vit_classifier():
         x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
         # Create a multi-head attention layer.
         attention_output = layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=projection_dim, dropout=0.1)(x1, x1)
+            num_heads=num_heads, key_dim=projection_dim, dropout=0.25)(x1, x1)
         # Skip connection 1.
         x2 = layers.Add()([attention_output, encoded_patches])
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         # MLP.
-        x3 = mlp(x3, hidden_units=transformer_units, dropout_rate=0.1)
+        x3 = mlp(x3, hidden_units=transformer_units, dropout_rate=0.25)
         # Skip connection 2.
         encoded_patches = layers.Add()([x3, x2])
 
     # Create a [batch_size, projection_dim] tensor.
     representation = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
     representation = layers.Flatten()(representation)
-    representation = layers.Dropout(0.1)(representation)  # change
+    representation = layers.Dropout(0.25)(representation)  # change
     # Add MLP.
     features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.5)  # change
     # Classify outputs.
@@ -97,16 +97,6 @@ def create_cnn_model():
     model.add(Dense(2, activation="softmax"))
 
     return model
-
-
-def create_fc_model():
-    model = Sequential()
-    model.add(Dense(128, activation='relu'))
-    model.add(Dense(32, activation='relu'))
-    model.add(Dense(2, activation="softmax"))
-
-    return model
-
 
 def create_model():
     model = Sequential()
@@ -136,9 +126,24 @@ def create_ed_cnn_model():
 
     return model
 
+def create_baseline_model(type):
+    model = Sequential()
 
-if __name__ == "__main__":
-    model = create_fc_model()
-    model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
-    model.build(input_shape=(None, 3000, 1))
-    model.summary()
+    if type == "LSTM":
+        model.add(LSTM(64, return_sequences=True))
+        model.add(LSTM(32, return_sequences=True))
+        model.add(LSTM(16, return_sequences=True))
+
+        model.add(Flatten())
+        model.add(Dense(4, activation="relu"))
+        model.add(Dense(2, activation="softmax"))
+    elif type == "CNN":
+        model.add(Conv1D(64, kernel_size=256, activation='relu', padding='same'))
+        model.add(Conv1D(32, kernel_size=64, activation='relu', padding='same'))
+        model.add(Conv1D(16, kernel_size=64, activation="relu", padding='same'))
+
+        model.add(Flatten())
+        model.add(Dense(4, activation="relu"))
+        model.add(Dense(2, activation="softmax"))
+    return model
+
