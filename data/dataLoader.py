@@ -1,9 +1,9 @@
 import os
-from random import shuffle
+import pickle
 import numpy as np
-import keras
 from biosppy.signals.ecg import correct_rpeaks, hamilton_segmenter
 from scipy.interpolate import splev, splrep
+from random import shuffle
 from scipy.signal import medfilt
 
 SIGNAL_LENGTH = 3000
@@ -11,32 +11,6 @@ SIGNAL_SCALE = 50000
 IN_FREQ = 100
 CHANNELS_NO = 4
 OUT_FREQ = 3
-
-
-class DataGenerator(keras.utils.Sequence):
-    def __init__(self, root_dir, batch_size=128):
-        self.root_dir = root_dir
-        self.batch_size = batch_size
-        self.root_dir = os.path.expanduser(root_dir)
-        self.file_list = os.listdir(self.root_dir)
-        shuffle(self.file_list)
-
-    def __len__(self):
-        return int(np.floor(len(self.file_list) / self.batch_size))
-
-    def __getitem__(self, index):
-        X = np.empty((self.batch_size, SIGNAL_LENGTH, 1))
-        y = np.empty(self.batch_size, dtype=float)
-
-        counter = 0
-        for i in range(index * self.batch_size, ((index + 1) * self.batch_size)):
-            path = self.root_dir + '/' + self.file_list[i]
-            tmp = np.load(path)
-            X[counter, :, 0] = np.squeeze(tmp['data']) * SIGNAL_SCALE
-            y[counter] = tmp['labels']
-            counter += 1
-
-        return X, y
 
 
 def get_all_data(root_dir):
@@ -75,9 +49,9 @@ def get_all_data(root_dir):
         X[i, :, 0] = rri_interp_signal
         X[i, :, 1] = amp_interp_signal
         X[i, :, 2] = np.interp(np.arange(0, SIGNAL_LENGTH, 33.34), np.arange(0, SIGNAL_LENGTH),
-                                                 tmp['data'][1]) * SIGNAL_SCALE
+                               tmp['data'][1]) * SIGNAL_SCALE
         X[i, :, 3] = np.interp(np.arange(0, SIGNAL_LENGTH, 33.34), np.arange(0, SIGNAL_LENGTH),
-                                                 tmp['data'][2]) - 80
+                               tmp['data'][2]) - 80
 
         # X[i, :, 0] = np.squeeze(tmp['data']) * SIGNAL_SCALE #(np.squeeze((tmp['data'] - tmp['data'].min()) / (tmp['data'].max() - tmp['data'].min())))
         y[i] = tmp['labels']
@@ -85,5 +59,25 @@ def get_all_data(root_dir):
     return np.delete(X, bad_idx, 0), np.delete(y, bad_idx, 0)
 
 
-if __name__ == "__main__":
-    get_all_data(r"C:\Data\preprocessed_three")
+# r"C:\data\preprocessed_three_bypatient"
+
+def load_data(pickle_path, folder_path="", is_pickle=True, save=True):
+    if is_pickle:
+        with open(pickle_path, 'rb') as f:
+            x, y = pickle.load(f)
+    else:
+
+        x0, y0 = get_all_data(folder_path + r"\f0")
+        x1, y1 = get_all_data(folder_path + r"\f1")
+        x2, y2 = get_all_data(folder_path + r"\f2")
+        x3, y3 = get_all_data(folder_path + r"\f3")
+        x4, y4 = get_all_data(folder_path + r"\f4")
+
+        x = [x0, x1, x2, x3, x4]
+        y = [y0, y1, y2, y3, y4]
+
+        if save:
+            with open(pickle_path, 'wb') as f:
+                pickle.dump([x, y], f)
+
+    return x, y

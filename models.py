@@ -1,9 +1,7 @@
 import keras
 import tensorflow as tf
 from keras import layers
-from keras.layers import Conv1D, MaxPooling1D, Reshape, BatchNormalization, GRU
-from keras.layers import Dense, Flatten, LSTM, Bidirectional, UpSampling1D
-from keras.models import Sequential
+from keras.layers import Reshape
 
 p = 90  # patch numbers
 l = 1
@@ -13,7 +11,7 @@ input_shape = (p * l, ch)
 image_size = p * l
 patch_size = l
 num_patches = p
-projection_dim = 16 #16
+projection_dim = 16  # 16
 num_heads = 4
 transformer_units = [
     projection_dim * 2,
@@ -23,7 +21,7 @@ transformer_layers = 3
 mlp_head_units = [1024, 256]  # [2048, 1024] Size of the dense layers of the final classifier
 
 
-########################################################################################################################
+################################### VIT Transformer ####################################################################
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
@@ -81,69 +79,4 @@ def create_vit_classifier():
     # Create the Keras model.
     return keras.Model(inputs=inputs, outputs=logits)
 
-
-def create_cnn_model():
-    model = Sequential()
-    model.add(Conv1D(32, kernel_size=8, activation="relu", padding='same', name='l1'))
-    model.add(MaxPooling1D(pool_size=2))
-    model.add(Conv1D(32, kernel_size=4, activation="relu", padding='same', name='l2'))
-    model.add(MaxPooling1D(pool_size=2))
-    model.add(Conv1D(64, kernel_size=2, activation="relu", padding='same', name='l3'))
-
-    model.add(Bidirectional(LSTM(64, return_sequences=True)))
-    model.add(Flatten())
-    model.add(Dense(64, activation="relu"))
-    model.add(Dense(32, activation="relu"))
-    model.add(Dense(2, activation="softmax"))
-
-    return model
-
-def create_model():
-    model = Sequential()
-    model.add(GRU(128, return_sequences=True))
-    model.add(GRU(32, return_sequences=True))
-    model.add(GRU(8, return_sequences=True))
-
-    model.add(Flatten())
-    model.add(Dense(8, activation="relu"))
-    model.add(Dense(2, activation="softmax"))
-
-    return model
-
-
-def create_ed_cnn_model():
-    model = Sequential()
-    model.add(Conv1D(16, kernel_size=50, activation="relu", padding='same', name='l1'))
-    model.add(MaxPooling1D(pool_size=10))
-    model.add(Conv1D(32, kernel_size=20, activation="relu", padding='same', name='l2'))
-    model.add(MaxPooling1D(pool_size=5))
-    model.add(Conv1D(64, kernel_size=10, activation="relu", padding='same', name='l3'))
-
-    model.add(UpSampling1D(size=10))
-    model.add(Conv1D(8, kernel_size=10, activation="relu", padding='same'))
-    model.add(UpSampling1D(size=5))
-    model.add(Conv1D(1, kernel_size=10, activation="relu", padding='same'))
-
-    return model
-
-def create_baseline_model(type):
-    model = Sequential()
-
-    if type == "LSTM":
-        model.add(LSTM(64, return_sequences=True))
-        model.add(LSTM(32, return_sequences=True))
-        model.add(LSTM(16, return_sequences=True))
-
-        model.add(Flatten())
-        model.add(Dense(4, activation="relu"))
-        model.add(Dense(2, activation="softmax"))
-    elif type == "CNN":
-        model.add(Conv1D(64, kernel_size=256, activation='relu', padding='same'))
-        model.add(Conv1D(32, kernel_size=64, activation='relu', padding='same'))
-        model.add(Conv1D(16, kernel_size=64, activation="relu", padding='same'))
-
-        model.add(Flatten())
-        model.add(Dense(4, activation="relu"))
-        model.add(Dense(2, activation="softmax"))
-    return model
-
+########################################################################################################################

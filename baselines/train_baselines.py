@@ -7,7 +7,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score, confusion_matrix
 from sklearn.neural_network import MLPClassifier
 
-MODEL_NAME = "MLP"
+from data.dataLoader import load_data
+
+MODEL_NAME = "LR"
 
 
 def select_model(model_name):
@@ -22,20 +24,7 @@ def select_model(model_name):
 
 
 if __name__ == "__main__":
-    # x0, y0 = get_all_data(r"C:\Data\preprocessed_three_bypatient\f0")
-    # x1, y1 = get_all_data(r"C:\Data\preprocessed_three_bypatient\f1")
-    # x2, y2 = get_all_data(r"C:\Data\preprocessed_three_bypatient\f2")
-    # x3, y3 = get_all_data(r"C:\Data\preprocessed_three_bypatient\f3")
-    # x4, y4 = get_all_data(r"C:\Data\preprocessed_three_bypatient\f4")
-    #
-    # x = [x0, x1, x2, x3, x4]
-    # y = [y0, y1, y2, y3, y4]
-    #
-    # with open('objs_foldPat.pkl', 'wb') as f:
-    #      pickle.dump([x, y], f)
-
-    with open(r'..\objs_foldPat.pkl', 'rb') as f:
-        x, y = pickle.load(f)
+    x, y = load_data(r'..\data\data.pkl')
 
     ACC = []
     SN = []
@@ -58,9 +47,6 @@ for fold in range(5):
                 x_train = np.concatenate((x_train, x[i]))
                 y_train = np.concatenate((y_train, y[i]))
 
-    # y_train = keras.utils.to_categorical(y_train, num_classes=2)
-    # y_test = keras.utils.to_categorical(y_test, num_classes=2)
-
     x_train_flatten = np.reshape(x_train, (x_train.shape[0], x_train.shape[1] * x_train.shape[2]))
     x_test_flatten = np.reshape(x_test, (x_test.shape[0], x_test.shape[1] * x_test.shape[2]))
 
@@ -68,12 +54,6 @@ for fold in range(5):
     model = model.fit(x_train_flatten, y_train)
 
     y_predict = model.predict(x_test_flatten)
-    # loss, accuracy = model.evaluate(x_test, y_test)
-    # y_score = model.predict(x_test)
-    # y_predict = np.argmax(y_score, axis=-1)
-    # y_training = np.argmax(y_test, axis=-1)
-
-    # Confusion matrix:
     C = confusion_matrix(y_test, y_predict, labels=(1, 0))
     TP, TN, FP, FN = C[0, 0], C[1, 1], C[1, 0], C[0, 1]
     acc, sn, sp = 1. * (TP + TN) / (TP + TN + FP + FN), 1. * TP / (TP + FN), 1. * TN / (TN + FP)
