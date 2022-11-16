@@ -1,9 +1,10 @@
+import pickle
+
 import keras
 import numpy as np
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from sklearn.metrics import confusion_matrix, f1_score
 
-from data.dataLoader import load_data
 from models import create_vit_classifier
 
 
@@ -15,7 +16,8 @@ def lr_schedule(epoch, lr):
 
 
 if __name__ == "__main__":
-    x, y = load_data(r'.\data\data.pkl')
+    with open(r'.\data\data.pkl', 'rb') as f:
+        x, y = pickle.load(f)
 
     ACC = []
     SN = []

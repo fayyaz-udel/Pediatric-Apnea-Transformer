@@ -7,7 +7,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score, confusion_matrix
 from sklearn.neural_network import MLPClassifier
 
-from data.dataLoader import load_data
 
 MODEL_NAME = "LR"
 
@@ -24,7 +23,8 @@ def select_model(model_name):
 
 
 if __name__ == "__main__":
-    x, y = load_data(r'..\data\data.pkl')
+    with open(r'.\data\data.pkl', 'rb') as f:
+        x, y = pickle.load(f)
 
     ACC = []
     SN = []
