@@ -10,12 +10,12 @@ from scipy.interpolate import splev, splrep
 import sleep_study as ss
 
 SIGNAL_SCALE = 50000
-NUM_WORKER = 1
+NUM_WORKER = 16
 SN = 3984  # STUDY NUMBER
 FREQ = 100
 CHANNELS_NO = 4
 CHUNK_DURATION = 30.0
-OUT_FOLDER = r'C:\Data\processed'
+OUT_FOLDER = 'C:\\Data\\p'
 channels = [
     'ECG EKG2-EKG',
     'RESP PTAF',
@@ -89,10 +89,6 @@ def change_duration(df, label_dict=POS_EVENT_DICT, duration=CHUNK_DURATION):
     return df
 
 
-def calculate_overlap():
-    return 0
-
-
 def preprocess(i, annotation_modifier, out_dir):
     is_apnea_available = True
     is_hypopnea_available = True
@@ -129,7 +125,7 @@ def preprocess(i, annotation_modifier, out_dir):
     epochs = mne.Epochs(raw, fixed_events, event_id=[0], tmin=0, tmax=tmax, baseline=None, preload=True, proj=False,
                         picks=channels, verbose=None)
     epochs.load_data()
-    epochs = epochs.filter(3.0, 45.0, n_jobs=4)
+    # epochs = epochs.filter(3.0, 45.0, n_jobs=4) # Filter aaaalll
     epochs = epochs.resample(FREQ, npad='auto', n_jobs=4)
     data = epochs.get_data()
 
@@ -163,8 +159,7 @@ def preprocess(i, annotation_modifier, out_dir):
 
     data = process_ECG(data)
 
-    np.savez_compressed(
-        out_dir + '\\' + study + "_" + str(total_apnea_event_second) + "_" + str(total_hypopnea_event_second),
+    np.savez_compressed(out_dir + '\\' + study + "_" + str(total_apnea_event_second) + "_" + str(total_hypopnea_event_second),
         data=data, labels_apnea=labels_apnea, labels_hypopnea=labels_hypopnea)
 
     return data.shape[0]

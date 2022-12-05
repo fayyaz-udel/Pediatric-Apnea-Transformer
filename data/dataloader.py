@@ -1,16 +1,19 @@
 import glob
 import os
-
+import random
 import numpy as np
+import pandas as pd
 
 SIGNAL_LENGTH = 3000
 SIGNAL_SCALE = 50000
 IN_FREQ = 100
 CHANNELS_NO = 4
 OUT_FREQ = 3
+PATH = "C:\\Data\\p\\"
 
 
 def load_data(path):
+    age_bmi = pd.read_csv("../misc/result.csv")
     root_dir = os.path.expanduser(path)
     file_list = os.listdir(root_dir)
     length = len(file_list)
@@ -21,6 +24,7 @@ def load_data(path):
 
     for i in range(length):
         patient_id = (file_list[i].split("_")[0])
+        study_id = (file_list[i].split("_")[1])
         apnea_count = int((file_list[i].split("_")[2]))
         hypopnea_count = int((file_list[i].split("_")[3]).split(".")[0])
 
@@ -39,12 +43,25 @@ def load_data(path):
     x = []
     y_apnea = []
     y_hypopnea = []
+    counter = 0
     for fold in folds:
         first = True
         for patient in fold:
-            for study in glob.glob("C:\\Data\\processed\\" + patient[0] + "_*"):
+            counter += 1
+            print(counter)
+            for study in glob.glob(PATH + patient[0] + "_*"):
                 study_data = np.load(study)
-                data = study_data['data']
+
+                signals = study_data['data']
+
+                identifier = study.split('\\')[-1].split('_')[0] + "_" + study.split('\\')[-1].split('_')[1]
+                bmi = np.ones((signals.shape[0], signals.shape[1])) * age_bmi[age_bmi['id'] == identifier].iat[0, 2] * 0.01
+                age = np.ones((signals.shape[0], signals.shape[1])) * age_bmi[age_bmi['id'] == identifier].iat[0, 3] * 0.01
+
+                data = np.zeros((signals.shape[0], signals.shape[1],6))
+                data[:, :, 0:4] = signals
+                data[:, :, 4] = bmi
+                data[:, :, 5] = age
                 labels_apnea = study_data['labels_apnea']
                 labels_hypopnea = study_data['labels_hypopnea']
                 if first:
@@ -64,5 +81,32 @@ def load_data(path):
     return x, y_apnea, y_hypopnea
 
 
+def downsample(x, y_apnea, y_hypopnea, ratio=0.01):
+    for f in range(5):
+        print("down sampling fold " + str(f))
+        x_c = x[f]
+        y_apnea_c = y_apnea[f]
+        y_hypopnea_c = y_hypopnea[f]
+        y_c = y_apnea_c  # TODO
+
+        neg_samples = np.where(y_c == 0)[0]
+        pos_samples = list(np.where(y_c > 0)[0])
+
+        neg_survived = []
+        for s in range(len(neg_samples)):
+            if random.random() < ratio:
+                neg_survived.append(neg_samples[s])
+
+        samples = neg_survived + pos_samples
+
+        x[f] = x_c[samples, :, :]
+        y_apnea[f] = y_apnea_c[samples]
+        y_hypopnea[f] = y_hypopnea_c[samples]
+
+    return x, y_apnea, y_hypopnea
+
+
 if __name__ == "__main__":
-    load_data(r"C:\Data\processed")
+    x, y_apnea, y_hypopnea = load_data(PATH)
+    x, y_apnea, y_hypopnea = downsample(x, y_apnea, y_hypopnea)
+    np.savez_compressed("C:\\Data\\filtered_bmi_age", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)

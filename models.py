@@ -5,19 +5,19 @@ from keras.layers import Reshape
 
 p = 90  # patch numbers
 l = 1
-ch = 4
+ch = 5
 num_classes = 2
 input_shape = (p * l, ch)
 image_size = p * l
 patch_size = l
 num_patches = p
-projection_dim = 16  # 16
-num_heads = 4
+projection_dim = 4  # 16
+num_heads = 2 #4
 transformer_units = [
     projection_dim * 2,
     projection_dim,
 ]  # Size of the transformer layers
-transformer_layers = 3
+transformer_layers = 2
 mlp_head_units = [1024, 256]  # [2048, 1024] Size of the dense layers of the final classifier
 
 
