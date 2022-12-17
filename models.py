@@ -5,19 +5,19 @@ from keras.layers import Reshape
 
 p = 90  # patch numbers
 l = 1
-ch = 5
-num_classes = 2
+ch = 6
+num_classes = 1 # For MultiClass num_classes = 2
 input_shape = (p * l, ch)
 image_size = p * l
 patch_size = l
 num_patches = p
-projection_dim = 4  # 16
-num_heads = 2 #4
+projection_dim = 16  # 16
+num_heads = 4 #4
 transformer_units = [
     projection_dim * 2,
     projection_dim,
 ]  # Size of the transformer layers
-transformer_layers = 2
+transformer_layers = 3
 mlp_head_units = [1024, 256]  # [2048, 1024] Size of the dense layers of the final classifier
 
 
@@ -75,8 +75,8 @@ def create_vit_classifier():
     # Add MLP.
     features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=0.5)  # change
     # Classify outputs.
-    logits = layers.Dense(num_classes, activation='softmax')(features)
-    # Create the Keras model.
+    logits = layers.Dense(num_classes, activation='sigmoid')(features) # For MultiClass activation='softmax'
+    # Create the Keras weights.
     return keras.Model(inputs=inputs, outputs=logits)
 
 ########################################################################################################################

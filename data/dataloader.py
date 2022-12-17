@@ -81,17 +81,18 @@ def load_data(path):
     return x, y_apnea, y_hypopnea
 
 
-def downsample(x, y_apnea, y_hypopnea, ratio=0.01):
+def downsample(x, y_apnea, y_hypopnea):
     for f in range(5):
         print("down sampling fold " + str(f))
         x_c = x[f]
         y_apnea_c = y_apnea[f]
         y_hypopnea_c = y_hypopnea[f]
-        y_c = y_apnea_c  # TODO
+        y_c = y_apnea_c + y_hypopnea_c
 
         neg_samples = np.where(y_c == 0)[0]
         pos_samples = list(np.where(y_c > 0)[0])
-
+        ratio = len(pos_samples) / len(neg_samples)
+        print("ratio is:" + str(ratio))
         neg_survived = []
         for s in range(len(neg_samples)):
             if random.random() < ratio:
@@ -109,4 +110,4 @@ def downsample(x, y_apnea, y_hypopnea, ratio=0.01):
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
     x, y_apnea, y_hypopnea = downsample(x, y_apnea, y_hypopnea)
-    np.savez_compressed("C:\\Data\\filtered_bmi_age", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
+    np.savez_compressed("C:\\Data\\filtered_bmi_age_test_all", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
