@@ -7,13 +7,13 @@ from models import create_vit_classifier
 
 DATA_PATH = "C:\\Data\\filtered_bmi_age_test_all.npz"
 THRESHOLD = 1
-
+FOLD = 1
 if __name__ == "__main__":
     data = np.load(DATA_PATH, allow_pickle=True)
     ############################################################################
     x, y_apnea, y_hypopnea = data['x'], data['y_apnea'], data['y_hypopnea']
     y = y_apnea + y_hypopnea
-    for i in range(5):
+    for i in range(FOLD):
         y[i] = np.greater_equal(y[i], THRESHOLD)
     ############################################################################
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     AUC = []
     AUPRC = []
 
-    for fold in range(5):
+    for fold in range(FOLD):
         x_test = np.nan_to_num(x[fold], nan=-1)
         y_test = y[fold] # For MultiClass keras.utils.to_categorical(y[fold], num_classes=2)
         model = keras.models.load_model("./weights/fold " + str(fold))
