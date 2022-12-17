@@ -2,14 +2,13 @@ import keras
 import numpy as np
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras.utils import Sequence
-from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score, average_precision_score
-from sklearn.utils import class_weight
 
 from models import create_vit_classifier
 
-DATA_PATH = "C:\\Data\\filtered_bmi_age_train_balanced.npz"
+DATA_PATH = "C:\\Data\\filtered_bmi_age_test_all.npz"
 THRESHOLD = 1
 FOLD = 5
+
 
 class DataGenerator(Sequence):
     def __init__(self, x_set, y_set, batch_size):
@@ -34,14 +33,12 @@ def lr_schedule(epoch, lr):
 
 if __name__ == "__main__":
     data = np.load(DATA_PATH, allow_pickle=True)
-
-    ############################################################################
     x, y_apnea, y_hypopnea = data['x'], data['y_apnea'], data['y_hypopnea']
     y = y_apnea + y_hypopnea
+
     for i in range(FOLD):
         y[i] = np.where(y[i] >= THRESHOLD, 1, 0)
-        #x[i] = x[i][:, :, :4] # CHANNEL SELECTION
-    ############################################################################
+        # x[i] = x[i][:, :, :4] # CHANNEL SELECTION
 
     for fold in range(FOLD):
         first = True
@@ -55,8 +52,8 @@ if __name__ == "__main__":
                     x_train = np.concatenate((x_train, np.nan_to_num(x[i], nan=-1)))
                     y_train = np.concatenate((y_train, y[i]))
 
-        #y_train = keras.utils.to_categorical(y_train, num_classes=2) # For MultiClass
-        #y_test = keras.utils.to_categorical(y_test, num_classes=2) # For MultiClass
+        # y_train = keras.utils.to_categorical(y_train, num_classes=2) # For MultiClass
+        # y_test = keras.utils.to_categorical(y_test, num_classes=2) # For MultiClass
         train_gen = DataGenerator(x_train, y_train, 256)
 
         model = create_vit_classifier()
@@ -68,9 +65,6 @@ if __name__ == "__main__":
         # history = model.fit(x=x_train, y=y_train, batch_size=256, epochs=10, validation_split=0.1,
         #                    callbacks=[early_stopper, lr_scheduler]) # TODO epochs=100
 
-        history = model.fit(train_gen, epochs=30, callbacks=[early_stopper, lr_scheduler])
+        history = model.fit(train_gen, epochs=10, callbacks=[early_stopper, lr_scheduler])
         model.save("./weights/fold " + str(fold))
         del x_train
-
-
-
