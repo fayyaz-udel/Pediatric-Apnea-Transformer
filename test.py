@@ -5,16 +5,16 @@ from keras.callbacks import LearningRateScheduler, EarlyStopping
 from sklearn.metrics import confusion_matrix, f1_score, average_precision_score, roc_auc_score
 from models import create_vit_classifier
 
-DATA_PATH = "C:\\Data\\filtered_bmi_age_test_all.npz"
+DATA_PATH = "C:\\Data\\filtered_bmi_age_train_balanced.npz"
 THRESHOLD = 1
-FOLD = 1
+FOLD = 1 #TODO
 if __name__ == "__main__":
     data = np.load(DATA_PATH, allow_pickle=True)
     ############################################################################
     x, y_apnea, y_hypopnea = data['x'], data['y_apnea'], data['y_hypopnea']
     y = y_apnea + y_hypopnea
     for i in range(FOLD):
-        y[i] = np.greater_equal(y[i], THRESHOLD)
+        y[i] = np.where(y[i] >= THRESHOLD, 1, 0)
     ############################################################################
 
     ACC = []
@@ -29,17 +29,16 @@ if __name__ == "__main__":
         y_test = y[fold] # For MultiClass keras.utils.to_categorical(y[fold], num_classes=2)
         model = keras.models.load_model("./weights/fold " + str(fold))
 
-        loss, accuracy = model.evaluate(x_test, y_test)
         y_score = model.predict(x_test)
         y_predict = np.where(y_score > 0.5, 1,0) # For MultiClass np.argmax(y_score, axis=-1)
-        y_groundtruth = y_test # For MultiClass np.argmax(y_test, axis=-1)
+        # For MultiClass y_test = np.argmax(y_test, axis=-1)
 
-        f1 = f1_score(y_groundtruth, y_predict)
-        auc = roc_auc_score(y_groundtruth, y_score) # For MultiClass y_score[:, 1]
-        auprc = average_precision_score(y_groundtruth, y_score) # For MultiClass y_score[:, 1]
+        f1 = f1_score(y_test, y_predict)
+        auc = roc_auc_score(y_test, y_score) # For MultiClass y_score[:, 1]
+        auprc = average_precision_score(y_test, y_score) # For MultiClass y_score[:, 1]
 
         # Confusion matrix:
-        C = confusion_matrix(y_groundtruth, y_predict, labels=(1, 0))
+        C = confusion_matrix(y_test, y_predict, labels=(1, 0))
         TP, TN, FP, FN = C[0, 0], C[1, 1], C[1, 0], C[0, 1]
         acc, sn, sp = 1. * (TP + TN) / (TP + TN + FP + FN), 1. * TP / (TP + FN), 1. * TN / (TN + FP)
 
@@ -56,7 +55,6 @@ if __name__ == "__main__":
     print(F1)
     print(AUC)
     print(AUPRC)
-    print(TP, TN, FP, FN)
 
     print("Accuracy: %.2f -+ %.3f" % (np.mean(ACC), np.std(ACC)))
     print("Sensitivity: %.2f -+ %.3f" % (np.mean(SN), np.std(SN)))

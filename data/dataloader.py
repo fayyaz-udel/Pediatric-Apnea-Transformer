@@ -9,11 +9,14 @@ SIGNAL_SCALE = 50000
 IN_FREQ = 100
 CHANNELS_NO = 4
 OUT_FREQ = 3
+THRESHOLD = 3
 PATH = "C:\\Data\\p\\"
 
 
 def load_data(path):
     age_bmi = pd.read_csv("../misc/result.csv")
+    ahi = pd.read_csv(r"C:\Data\AHI.csv")
+    ahi_dict = dict(zip(ahi.Study, ahi.AHI))
     root_dir = os.path.expanduser(path)
     file_list = os.listdir(root_dir)
     length = len(file_list)
@@ -21,21 +24,25 @@ def load_data(path):
     study_event_counts = {}
     apnea_event_counts = {}
     hypopnea_event_counts = {}
-
+    ######################################## Count the respiratory events ###########################################
     for i in range(length):
         patient_id = (file_list[i].split("_")[0])
         study_id = (file_list[i].split("_")[1])
         apnea_count = int((file_list[i].split("_")[2]))
         hypopnea_count = int((file_list[i].split("_")[3]).split(".")[0])
 
-        apnea_event_counts[patient_id] = apnea_event_counts.get(patient_id, 0) + apnea_count
-        hypopnea_event_counts[patient_id] = hypopnea_event_counts.get(patient_id, 0) + hypopnea_count
-        study_event_counts[patient_id] = study_event_counts.get(patient_id, 0) + apnea_count + hypopnea_count
+        if ahi_dict.get(patient_id + "_" + study_id, 0) > THRESHOLD:
+            apnea_event_counts[patient_id] = apnea_event_counts.get(patient_id, 0) + apnea_count
+            hypopnea_event_counts[patient_id] = hypopnea_event_counts.get(patient_id, 0) + hypopnea_count
+            study_event_counts[patient_id] = study_event_counts.get(patient_id, 0) + apnea_count + hypopnea_count
+        else:
+            os.remove(PATH + file_list[i])
 
     apnea_event_counts = sorted(apnea_event_counts.items(), key=lambda item: item[1])
     hypopnea_event_counts = sorted(hypopnea_event_counts.items(), key=lambda item: item[1])
     study_event_counts = sorted(study_event_counts.items(), key=lambda item: item[1])
 
+    ################################### Fold the data based on number of respiratory events #########################
     folds = []
     for i in range(5):
         folds.append(study_event_counts[i::5])
@@ -109,5 +116,5 @@ def downsample(x, y_apnea, y_hypopnea):
 
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
-    x, y_apnea, y_hypopnea = downsample(x, y_apnea, y_hypopnea)
-    np.savez_compressed("C:\\Data\\filtered_bmi_age_test_all", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
+    # x, y_apnea, y_hypopnea = downsample(x, y_apnea, y_hypopnea)
+    np.savez_compressed("C:\\Data\\filtered_bmi_age_"+ str(THRESHOLD) +"threshold", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)

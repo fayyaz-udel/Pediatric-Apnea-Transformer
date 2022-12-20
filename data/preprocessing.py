@@ -54,7 +54,6 @@ POS_EVENT_DICT = {
     "apnea": 2,
     "obstructive apnea": 2,
     "central apnea": 2,
-    "apnea": 2,
     "Apnea": 2,
 }
 
