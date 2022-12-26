@@ -2,7 +2,7 @@ import keras
 import numpy as np
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras.utils import Sequence
-
+from sklearn.utils import shuffle
 import networks
 from metrics import Precision, Recall
 
@@ -44,6 +44,7 @@ if __name__ == "__main__":
     y = y_apnea + y_hypopnea
 
     for i in range(FOLD):
+        x[i], y[i] = shuffle(x[i], y[i])
         y[i] = np.where(y[i] >= THRESHOLD, 1, 0)
         # x[i] = x[i][:, :, :4] # CHANNEL SELECTION
 
@@ -64,8 +65,8 @@ if __name__ == "__main__":
         # train_gen = DataGenerator(x_train, y_train, 256)
 
         model = networks.create_transformer_model(input_shape=(90, 6),
-                                                  num_patches=30, patch_size=3, projection_dim=16,
-                                                  transformer_layers=6, num_heads=4, transformer_units=[32, 16],
+                                                  num_patches=30, patch_size=3, projection_dim=32,
+                                                  transformer_layers=8, num_heads=4, transformer_units=[64, 32],
                                                   mlp_head_units=[256, 128], num_classes=1)
 
         print(model.summary())
@@ -75,7 +76,7 @@ if __name__ == "__main__":
 
         lr_scheduler = LearningRateScheduler(lr_schedule)
         early_stopper = EarlyStopping(patience=30, restore_best_weights=True)
-        history = model.fit(x=x_train, y=y_train, batch_size=128, epochs=100, validation_split=0.1,
-                           callbacks=[early_stopper, lr_scheduler, model_checkpoint_callback], class_weight={0: 1.0, 1: 2.0})
+        history = model.fit(x=x_train, y=y_train, batch_size=256, epochs=100, validation_split=0.1,
+                           callbacks=[early_stopper, lr_scheduler], class_weight={0: 1.0, 1: 2.0})
 
-        model.save("./weights/fold " + str(fold))
+        model.save("./weights36432/fold " + str(fold))

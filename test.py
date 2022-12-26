@@ -1,19 +1,21 @@
 import keras
 import numpy as np
-from sklearn import metrics
-from keras.callbacks import LearningRateScheduler, EarlyStopping
+from sklearn.utils import shuffle
 from sklearn.metrics import confusion_matrix, f1_score, average_precision_score, roc_auc_score
-from models import create_vit_classifier
 
-DATA_PATH = "C:\\Data\\filtered_bmi_age_train_balanced.npz"
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+DATA_PATH = "C:\\Data\\filtered_bmi_age_3threshold.npz"
 THRESHOLD = 1
-FOLD = 1 #TODO
+FOLD = 2 #TODO
 if __name__ == "__main__":
     data = np.load(DATA_PATH, allow_pickle=True)
     ############################################################################
     x, y_apnea, y_hypopnea = data['x'], data['y_apnea'], data['y_hypopnea']
     y = y_apnea + y_hypopnea
     for i in range(FOLD):
+        x[i], y[i] = shuffle(x[i], y[i])
         y[i] = np.where(y[i] >= THRESHOLD, 1, 0)
     ############################################################################
 
@@ -27,9 +29,9 @@ if __name__ == "__main__":
     for fold in range(FOLD):
         x_test = np.nan_to_num(x[fold], nan=-1)
         y_test = y[fold] # For MultiClass keras.utils.to_categorical(y[fold], num_classes=2)
-        model = keras.models.load_model("./weights/fold " + str(fold))
+        model = keras.models.load_model("./weightsbal/fold " + str(fold))
 
-        y_score = model.predict(x_test)
+        y_score = sigmoid(model.predict(x_test))
         y_predict = np.where(y_score > 0.5, 1,0) # For MultiClass np.argmax(y_score, axis=-1)
         # For MultiClass y_test = np.argmax(y_test, axis=-1)
 
