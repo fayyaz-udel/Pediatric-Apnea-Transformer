@@ -65,14 +65,14 @@ if __name__ == "__main__":
         # train_gen = DataGenerator(x_train, y_train, 256)
 
         model = networks.create_transformer_model(input_shape=(90, 6),
-                                                  num_patches=30, patch_size=3, projection_dim=32,
-                                                  transformer_layers=8, num_heads=4, transformer_units=[64, 32],
+                                                  num_patches=90, patch_size=1, projection_dim=16,
+                                                  transformer_layers=6, num_heads=4, transformer_units=[32, 16],
                                                   mlp_head_units=[256, 128], num_classes=1)
 
         print(model.summary())
 
         opt = keras.optimizers.Adam()
-        model.compile(optimizer=opt, loss=keras.losses.BinaryFocalCrossentropy(from_logits=True), metrics=['accuracy', Precision(from_logits=True), Recall(from_logits=True)])
+        model.compile(optimizer=opt, loss=keras.losses.BinaryFocalCrossentropy(from_logits=True, apply_class_balancing=True), metrics=['accuracy', Precision(from_logits=True), Recall(from_logits=True)])
 
         lr_scheduler = LearningRateScheduler(lr_schedule)
         early_stopper = EarlyStopping(patience=30, restore_best_weights=True)

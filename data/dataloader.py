@@ -116,5 +116,5 @@ def downsample(x, y_apnea, y_hypopnea):
 
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
-    x, y_apnea, y_hypopnea = downsample(x, y_apnea, y_hypopnea)
+    # x, y_apnea, y_hypopnea = downsample(x, y_apnea, y_hypopnea)
     np.savez_compressed("C:\\Data\\filtered_bmi_age_"+ str(THRESHOLD) +"threshold", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)

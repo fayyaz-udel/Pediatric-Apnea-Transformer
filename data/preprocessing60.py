@@ -15,7 +15,7 @@ NUM_WORKER = 4
 SN = 3984  # STUDY NUMBER
 FREQ = 100
 CHANNELS_NO = 4
-CHUNK_DURATION = 30.0
+CHUNK_DURATION = 60.0 #TODO 30.0
 OUT_FOLDER = 'C:\\Data\\p'
 channels = [
     'ECG EKG2-EKG',
@@ -147,7 +147,7 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
     total_hypopnea_event_second = 0
 
     for seq in range(data.shape[0]):
-        epoch_set = set(range(starts[seq], starts[seq] + 30))
+        epoch_set = set(range(starts[seq], starts[seq] + 60)) #TODO 30
         if is_apnea_available:
             apnea_seconds = len(apnea_events_set.intersection(epoch_set))
             total_apnea_event_second += apnea_seconds
@@ -174,9 +174,9 @@ def process_ECG(data):
     sleep_epoch_number = data.shape[0]
     SIGNAL_LENGTH = FREQ * CHUNK_DURATION
     ir = 3  # INTERPOLATION RATE(3HZ)
-    tm = np.arange(0, 30, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION
+    tm = np.arange(0, 60, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION #TODO 30
 
-    X = np.zeros((sleep_epoch_number, 90, CHANNELS_NO))
+    X = np.zeros((sleep_epoch_number, 180, CHANNELS_NO)) #TODO 90
 
     for i in range(sleep_epoch_number):
         signal = np.squeeze(data[i, 0]) * SIGNAL_SCALE
