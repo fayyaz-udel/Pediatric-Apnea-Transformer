@@ -4,13 +4,13 @@ import random
 import numpy as np
 import pandas as pd
 
-SIGNAL_LENGTH = 3000
+SIGNAL_LENGTH = 6000
 SIGNAL_SCALE = 50000
 IN_FREQ = 100
 CHANNELS_NO = 4
 OUT_FREQ = 3
 THRESHOLD = 3
-PATH = "C:\\Data\\p\\"
+PATH = "C:\\Data\\ps60\\"
 
 
 def load_data(path):
@@ -116,5 +116,5 @@ def downsample(x, y_apnea, y_hypopnea):
 
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
-    # x, y_apnea, y_hypopnea = downsample(x, y_apnea, y_hypopnea)
-    np.savez_compressed("C:\\Data\\filtered_bmi_age_"+ str(THRESHOLD) +"threshold", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
+    x, y_apnea, y_hypopnea = downsample(x, y_apnea, y_hypopnea)
+    np.savez_compressed("C:\\Data\\filtered_balanced", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)

@@ -6,9 +6,9 @@ from sklearn.metrics import confusion_matrix, f1_score, average_precision_score,
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-DATA_PATH = "C:\\Data\\filtered_bmi_age_3threshold.npz"
+DATA_PATH = "C:\\Data\\filtered_balanced.npz"
 THRESHOLD = 1
-FOLD = 2 #TODO
+FOLD = 5 #TODO
 if __name__ == "__main__":
     data = np.load(DATA_PATH, allow_pickle=True)
     ############################################################################
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     print(AUPRC)
 
     print("Accuracy: %.2f -+ %.3f" % (np.mean(ACC), np.std(ACC)))
-    print("Sensitivity: %.2f -+ %.3f" % (np.mean(SN), np.std(SN)))
+    print("Recall: %.2f -+ %.3f" % (np.mean(SN), np.std(SN)))
     print("Specifity: %.2f -+ %.3f" % (np.mean(SP), np.std(SP)))
     print("F1: %.2f -+ %.3f" % (np.mean(F1), np.std(F1)))
     print("AUROC: %.2f -+ %.3f" % (np.mean(AUC), np.std(AUC)))

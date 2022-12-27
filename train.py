@@ -6,7 +6,7 @@ from sklearn.utils import shuffle
 import networks
 from metrics import Precision, Recall
 
-DATA_PATH = "C:\\Data\\filtered_bmi_age_3threshold.npz"
+DATA_PATH = "C:\\Data\\filtered_balanced.npz"
 THRESHOLD = 1
 FOLD = 5
 
@@ -27,7 +27,7 @@ class DataGenerator(Sequence):
 
 def lr_schedule(epoch, lr):
     if epoch > 30 and (epoch - 5) % 10 == 0:
-        lr *= 0.25
+        lr *= 0.5
     print("Learning rate: ", lr)
     return lr
 
@@ -64,19 +64,17 @@ if __name__ == "__main__":
         # y_test = keras.utils.to_categorical(y_test, num_classes=2) # For MultiClass
         # train_gen = DataGenerator(x_train, y_train, 256)
 
-        model = networks.create_transformer_model(input_shape=(90, 6),
-                                                  num_patches=90, patch_size=1, projection_dim=16,
-                                                  transformer_layers=6, num_heads=4, transformer_units=[32, 16],
+        model = networks.create_transformer_model(input_shape=(180, 6),
+                                                  num_patches=60, patch_size=3, projection_dim=32,
+                                                  transformer_layers=6, num_heads=4, transformer_units=[64, 32],
                                                   mlp_head_units=[256, 128], num_classes=1)
 
-        print(model.summary())
-
         opt = keras.optimizers.Adam()
-        model.compile(optimizer=opt, loss=keras.losses.BinaryFocalCrossentropy(from_logits=True, apply_class_balancing=True), metrics=['accuracy', Precision(from_logits=True), Recall(from_logits=True)])
+        model.compile(optimizer=opt, loss=keras.losses.BinaryFocalCrossentropy(from_logits=True), metrics=['accuracy', Precision(from_logits=True), Recall(from_logits=True)])
 
         lr_scheduler = LearningRateScheduler(lr_schedule)
         early_stopper = EarlyStopping(patience=30, restore_best_weights=True)
         history = model.fit(x=x_train, y=y_train, batch_size=256, epochs=100, validation_split=0.1,
-                           callbacks=[early_stopper, lr_scheduler], class_weight={0: 1.0, 1: 2.0})
+                           callbacks=[early_stopper, lr_scheduler])
 
-        model.save("./weights36432/fold " + str(fold))
+        model.save("./weightsbal/fold " + str(fold))
