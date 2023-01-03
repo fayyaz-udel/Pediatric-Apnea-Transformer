@@ -6,7 +6,7 @@ from sklearn.utils import shuffle
 import networks
 from metrics import Precision, Recall
 
-DATA_PATH = "C:\\Data\\filtered_balanced.npz"
+DATA_PATH = "C:\\Data\\filtered60_bmi_age_3threshold.npz"
 THRESHOLD = 1
 FOLD = 5
 
@@ -75,6 +75,6 @@ if __name__ == "__main__":
         lr_scheduler = LearningRateScheduler(lr_schedule)
         early_stopper = EarlyStopping(patience=30, restore_best_weights=True)
         history = model.fit(x=x_train, y=y_train, batch_size=256, epochs=100, validation_split=0.1,
-                           callbacks=[early_stopper, lr_scheduler])
+                           callbacks=[early_stopper, lr_scheduler], class_weight={0: 0.5, 1: 2.0})
 
-        model.save("./weightsbal/fold " + str(fold))
+        model.save("./weights/fold " + str(fold))

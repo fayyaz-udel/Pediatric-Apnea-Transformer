@@ -29,7 +29,7 @@ if __name__ == "__main__":
     for fold in range(FOLD):
         x_test = np.nan_to_num(x[fold], nan=-1)
         y_test = y[fold] # For MultiClass keras.utils.to_categorical(y[fold], num_classes=2)
-        model = keras.models.load_model("./weightsbal/fold " + str(fold))
+        model = keras.models.load_model("./weights/fold " + str(fold))
 
         y_score = sigmoid(model.predict(x_test))
         y_predict = np.where(y_score > 0.5, 1,0) # For MultiClass np.argmax(y_score, axis=-1)

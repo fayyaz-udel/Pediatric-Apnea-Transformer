@@ -8,6 +8,7 @@ from mne import make_fixed_length_events
 from scipy.interpolate import splev, splrep
 from itertools import compress
 
+
 import sleep_study as ss
 
 THRESHOLD = 3
@@ -16,8 +17,8 @@ NUM_WORKER = 8
 SN = 3984  # STUDY NUMBER
 FREQ = 100
 CHANNELS_NO = 4
-CHUNK_DURATION = 60.0
-OUT_FOLDER = 'C:\\Data\\psss60'
+CHUNK_DURATION = 30.0
+OUT_FOLDER = 'C:\\Data\\ps30'
 channels = [
     'ECG EKG2-EKG',
     'RESP PTAF',
@@ -100,18 +101,18 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
     raw = ss.data.load_study(study, annotation_modifier, verbose=True)
     ########################################   CHECK CRITERIA FOR SS   #################################################
     if not all([name in raw.ch_names for name in channels]):
-        #print("study " + str(study) + " skipped since insufficient channels")
+        print("study " + str(study) + " skipped since insufficient channels")
         return 0
 
     if ahi_dict.get(study, 0) < THRESHOLD:
-        #print("study " + str(study) + " skipped since low AHI ---  AHI = " + str(ahi_dict.get(study, 0)))
+        print("study " + str(study) + " skipped since low AHI ---  AHI = " + str(ahi_dict.get(study, 0)))
         return 0
 
     try:
         apnea_events, event_ids = mne.events_from_annotations(raw, event_id=POS_EVENT_DICT, chunk_duration=1.0,
                                                               verbose=None)
     except ValueError:
-        #print("No Chunk found!")
+        print("No Chunk found!")
         return 0
     ########################################   CHECK CRITERIA FOR SS   #################################################
     print(str(i) + "---" + str(datetime.now().time().strftime("%H:%M:%S")) + ' --- Processing %d' % i)
@@ -190,7 +191,7 @@ def process_ECG(data):
     sleep_epoch_number = data.shape[0]
     SIGNAL_LENGTH = FREQ * CHUNK_DURATION
     ir = 3  # INTERPOLATION RATE(3HZ)
-    tm = np.arange(0, 60, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION #TODO 30
+    tm = np.arange(0, CHUNK_DURATION, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION #TODO 30
 
     X = np.zeros((sleep_epoch_number, 180, CHANNELS_NO))  # TODO 90
 

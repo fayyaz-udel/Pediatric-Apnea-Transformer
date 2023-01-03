@@ -3,6 +3,7 @@ import os
 import random
 import numpy as np
 import pandas as pd
+from scipy.stats import zscore
 
 SIGNAL_LENGTH = 6000
 SIGNAL_SCALE = 50000
@@ -66,7 +67,10 @@ def load_data(path):
                 age = np.ones((signals.shape[0], signals.shape[1])) * age_bmi[age_bmi['id'] == identifier].iat[0, 3] * 0.01
 
                 data = np.zeros((signals.shape[0], signals.shape[1],6))
-                data[:, :, 0:4] = signals
+                data[:, :, 0] = zscore(signals[:,:,0], axis=None, nan_policy='omit')
+                data[:, :, 1] = zscore(signals[:, :, 1], axis=None, nan_policy='omit')
+                data[:, :, 2] = zscore(signals[:, :, 2], axis=None, nan_policy='omit')
+                data[:, :, 3] = zscore(signals[:, :, 3], axis=None, nan_policy='omit')
                 data[:, :, 4] = bmi
                 data[:, :, 5] = age
                 labels_apnea = study_data['labels_apnea']
@@ -117,4 +121,4 @@ def downsample(x, y_apnea, y_hypopnea):
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
     x, y_apnea, y_hypopnea = downsample(x, y_apnea, y_hypopnea)
-    np.savez_compressed("C:\\Data\\filtered_balanced", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
+    np.savez_compressed("C:\\Data\\filtered_balancedz", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
