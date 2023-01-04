@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
-
-
+import numpy as np
+from sklearn.metrics import confusion_matrix, f1_score, average_precision_score, roc_auc_score
 class FromLogitsMixin:
     def __init__(self, from_logits=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -47,3 +47,49 @@ class Recall(FromLogitsMixin, tf.metrics.Recall):
 
 class F1Score(FromLogitsMixin, tfa.metrics.F1Score):
     ...
+
+
+class Result:
+    def __init__(self):
+        self.accuracy_list = []
+        self.sensitivity_list = []
+        self.specificity_list = []
+        self.f1_list = []
+        self.auroc_list = []
+        self.auprc_list = []
+        self.precision_list = []
+
+    def add(self, y_test, y_predict, y_score):
+        C = confusion_matrix(y_test, y_predict, labels=(1, 0))
+        TP, TN, FP, FN = C[0, 0], C[1, 1], C[1, 0], C[0, 1]
+
+        acc, sn, sp, pr = 1. * (TP + TN) / (TP + TN + FP + FN), 1. * TP / (TP + FN), 1. * TN / (TN + FP), 1. * TP / (
+                    TP + FP)
+        f1 = f1_score(y_test, y_predict)
+        auc = roc_auc_score(y_test, y_score)
+        auprc = average_precision_score(y_test, y_score)
+
+        self.accuracy_list.append(acc * 100)
+        self.sensitivity_list.append(sn * 100)
+        self.specificity_list.append(sp * 100)
+        self.f1_list.append(f1 * 100)
+        self.precision_list.append(pr * 100)
+        self.auprc_list.append(auprc * 100)
+        self.auroc_list.append(auc * 100)
+
+    def print(self):
+        print("===========================================================================")
+        print(self.accuracy_list)
+        print(self.sensitivity_list)
+        print(self.specificity_list)
+        print(self.f1_list)
+        print(self.precision_list)
+        print(self.auroc_list)
+        print(self.auprc_list)
+        print("Accuracy: %.2f -+ %.3f" % (np.mean(self.accuracy_list), np.std(self.accuracy_list)))
+        print("Sensitivity: %.2f -+ %.3f" % (np.mean(self.sensitivity_list), np.std(self.sensitivity_list)))
+        print("Specifity: %.2f -+ %.3f" % (np.mean(self.specificity_list), np.std(self.specificity_list)))
+        print("F1: %.2f -+ %.3f" % (np.mean(self.f1_list), np.std(self.f1_list)))
+        print("Precision: %.2f -+ %.3f" % (np.mean(self.precision_list), np.std(self.precision_list)))
+        print("AUROC: %.2f -+ %.3f" % (np.mean(self.auroc_list), np.std(self.auroc_list)))
+        print("AUPRC: %.2f -+ %.3f" % (np.mean(self.auprc_list), np.std(self.auprc_list)))
