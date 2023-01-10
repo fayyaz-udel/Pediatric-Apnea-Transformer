@@ -2,6 +2,8 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 import numpy as np
 from sklearn.metrics import confusion_matrix, f1_score, average_precision_score, roc_auc_score
+
+
 class FromLogitsMixin:
     def __init__(self, from_logits=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -64,7 +66,7 @@ class Result:
         TP, TN, FP, FN = C[0, 0], C[1, 1], C[1, 0], C[0, 1]
 
         acc, sn, sp, pr = 1. * (TP + TN) / (TP + TN + FP + FN), 1. * TP / (TP + FN), 1. * TN / (TN + FP), 1. * TP / (
-                    TP + FP)
+                TP + FP)
         f1 = f1_score(y_test, y_predict)
         auc = roc_auc_score(y_test, y_score)
         auprc = average_precision_score(y_test, y_score)
@@ -77,19 +79,33 @@ class Result:
         self.auprc_list.append(auprc * 100)
         self.auroc_list.append(auc * 100)
 
+    def get(self):
+        out_str = "=========================================================================== \n"
+        out_str += str(self.accuracy_list) + " \n"
+        out_str += str(self.sensitivity_list) + " \n"
+        out_str += str(self.specificity_list) + " \n"
+        out_str += str(self.f1_list) + " \n"
+        out_str += str(self.precision_list) + " \n"
+        out_str += str(self.auroc_list) + " \n"
+        out_str += str(self.auprc_list) + " \n"
+        out_str += str("Accuracy: %.2f -+ %.3f" % (np.mean(self.accuracy_list), np.std(self.accuracy_list))) + " \n"
+        out_str += str(
+            "Sensitivity: %.2f -+ %.3f" % (np.mean(self.sensitivity_list), np.std(self.sensitivity_list))) + " \n"
+        out_str += str(
+            "Specifity: %.2f -+ %.3f" % (np.mean(self.specificity_list), np.std(self.specificity_list))) + " \n"
+        out_str += str("F1: %.2f -+ %.3f" % (np.mean(self.f1_list), np.std(self.f1_list))) + " \n"
+        out_str += str("Precision: %.2f -+ %.3f" % (np.mean(self.precision_list), np.std(self.precision_list))) + " \n"
+        out_str += str("AUROC: %.2f -+ %.3f" % (np.mean(self.auroc_list), np.std(self.auroc_list))) + " \n"
+        out_str += str("AUPRC: %.2f -+ %.3f" % (np.mean(self.auprc_list), np.std(self.auprc_list))) + " \n"
+        return out_str
+
     def print(self):
-        print("===========================================================================")
-        print(self.accuracy_list)
-        print(self.sensitivity_list)
-        print(self.specificity_list)
-        print(self.f1_list)
-        print(self.precision_list)
-        print(self.auroc_list)
-        print(self.auprc_list)
-        print("Accuracy: %.2f -+ %.3f" % (np.mean(self.accuracy_list), np.std(self.accuracy_list)))
-        print("Sensitivity: %.2f -+ %.3f" % (np.mean(self.sensitivity_list), np.std(self.sensitivity_list)))
-        print("Specifity: %.2f -+ %.3f" % (np.mean(self.specificity_list), np.std(self.specificity_list)))
-        print("F1: %.2f -+ %.3f" % (np.mean(self.f1_list), np.std(self.f1_list)))
-        print("Precision: %.2f -+ %.3f" % (np.mean(self.precision_list), np.std(self.precision_list)))
-        print("AUROC: %.2f -+ %.3f" % (np.mean(self.auroc_list), np.std(self.auroc_list)))
-        print("AUPRC: %.2f -+ %.3f" % (np.mean(self.auprc_list), np.std(self.auprc_list)))
+        print(self.get())
+
+    def save(self, path, config):
+        file = open(path, "w+")
+        file.write(str(config))
+        file.write("\n")
+        file.write(self.get())
+        file.flush()
+        file.close()

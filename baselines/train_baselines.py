@@ -25,6 +25,7 @@ def select_model(model_name):
 
 
 if __name__ == "__main__":
+    result = Result()
     data = np.load(DATA_PATH, allow_pickle=True)
     x, y_apnea, y_hypopnea = data['x'], data['y_apnea'], data['y_hypopnea']
     y = y_apnea + y_hypopnea
@@ -50,16 +51,14 @@ if __name__ == "__main__":
                     x_train = np.concatenate((x_train, x[i]))
                     y_train = np.concatenate((y_train, y[i]))
 
-    x_train_flatten = np.reshape(x_train, (x_train.shape[0], x_train.shape[1] * x_train.shape[2]))
-    x_test_flatten = np.reshape(x_test, (x_test.shape[0], x_test.shape[1] * x_test.shape[2]))
+        x_train_flatten = np.reshape(x_train, (x_train.shape[0], x_train.shape[1] * x_train.shape[2]))
+        x_test_flatten = np.reshape(x_test, (x_test.shape[0], x_test.shape[1] * x_test.shape[2]))
 
-    result = Result()
+        model = select_model(MODEL_NAME)
+        model = model.fit(x_train_flatten, y_train)
 
-    model = select_model(MODEL_NAME)
-    model = model.fit(x_train_flatten, y_train)
+        y_predict = model.predict(x_test_flatten)
+        y_score = model.predict_proba(x_test_flatten)[:, 1]
+        result.add(y_test, y_predict, y_score)
 
-    y_predict = model.predict(x_test_flatten)
-    y_score = model.predict_proba(x_test_flatten)[:, 1]
-    result.add(y_test, y_predict, y_score)
-
-result.print()
+    result.print()

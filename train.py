@@ -1,38 +1,47 @@
+import keras.metrics
 import numpy as np
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from sklearn.utils import shuffle
+from keras.losses import BinaryFocalCrossentropy, BinaryCrossentropy, Huber, MeanSquaredError, MeanAbsoluteError
 
-import networks
+import metrics
+from metrics import Precision, Recall
+from models.models import get_model
 
-DATA_PATH = "C:\\Data\\filtered_balanced.npz"
-MODEL_PATH = "./weights_bal_cls/fold "
 THRESHOLD = 1
 FOLD = 5
 
 
 def lr_schedule(epoch, lr):
-    if epoch > 30 and (epoch - 5) % 10 == 0:
+    if epoch > 50 and (epoch - 1) % 10 == 0:
         lr *= 0.5
-    print("Learning rate: ", lr)
+    # print("Learning rate: ", lr)
     return lr
 
 
-if __name__ == "__main__":
-    data = np.load(DATA_PATH, allow_pickle=True)
+def extract_features():
+    pass
+
+
+def train(data_path, model_path, config):
+    data = np.load(data_path, allow_pickle=True)
     x, y_apnea, y_hypopnea = data['x'], data['y_apnea'], data['y_hypopnea']
     y = y_apnea + y_hypopnea
     ########################################################################################
     for i in range(FOLD):
         x[i], y[i] = shuffle(x[i], y[i])
 
-        y[i] = np.where(y[i] >= THRESHOLD, 1, 0)
-        # y[i] = np.sqrt(y[i])
-        # y[i][y[i] != 0] += 2
+        if config["regression"]:
+            y[i] = np.sqrt(y[i])
+            y[i][y[i] != 0] += 2
+        else:
+            y[i] = np.where(y[i] >= THRESHOLD, 1, 0)
+
         # x[i] = x[i][:, :, :4] # CHANNEL SELECTION
     ########################################################################################
     for fold in range(FOLD):
         first = True
-        for i in range(FOLD):
+        for i in range(5):
             if i != fold:
                 if first:
                     x_train = np.nan_to_num(x[i], nan=-1)
@@ -45,18 +54,18 @@ if __name__ == "__main__":
         # y_train = keras.utils.to_categorical(y_train, num_classes=2) # For MultiClass
         # y_test = keras.utils.to_categorical(y_test, num_classes=2) # For MultiClass
         ################################################################################################################
-        model = networks.create_transformer_model(input_shape=(180, 6),
-                                                  num_patches=60, patch_size=3, projection_dim=16,
-                                                  transformer_layers=4, num_heads=4, transformer_units=[32, 16],
-                                                  mlp_head_units=[256, 128], num_classes=1)
+        # Huber(), "mean_squared_error", "mean_absolute_error" Precision(from_logits=True), Recall(from_logits=True)
+        model = get_model(config)
+        if config["regression"]:
+            model.compile(optimizer="adam", loss=MeanAbsoluteError())
+            early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
-        model.compile(optimizer='adam', loss="mean_squared_error", metrics=["mean_absolute_error"])
-        # 'accuracy', Precision(from_logits=True), Recall(from_logits=True) TODO
+        else:
+            model.compile(optimizer="adam", loss=BinaryCrossentropy(), metrics=[metrics.Precision(), metrics.Recall()])
+            early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
         lr_scheduler = LearningRateScheduler(lr_schedule)
-        early_stopper = EarlyStopping(patience=30, restore_best_weights=True)
-        history = model.fit(x=x_train, y=y_train, batch_size=256, epochs=100, validation_split=0.1,
+        history = model.fit(x=x_train, y=y_train, batch_size=256, epochs=config["epochs"], validation_split=0.1,
                             callbacks=[early_stopper, lr_scheduler])
-        # , class_weight={0: 0.5, 1: 2.0}
-
-        model.save(MODEL_PATH + str(fold))
+        ################################################################################################################
+        model.save(model_path + str(fold))

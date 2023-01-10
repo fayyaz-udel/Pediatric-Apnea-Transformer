@@ -18,7 +18,7 @@ transformer_units = [
     projection_dim * 2,
     projection_dim,
 ]  # Size of the transformer layers
-transformer_layers = 4
+transformer_layers = 3
 mlp_head_units = [256, 128]  # [2048, 1024] Size of the dense layers of the final classifier
 
 
