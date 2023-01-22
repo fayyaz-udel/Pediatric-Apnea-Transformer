@@ -4,31 +4,38 @@ import pandas as pd
 import mne
 import numpy as np
 import scipy
-import matplotlib
-from numpy import array
-
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from biosppy.signals.ecg import ecg, hamilton_segmenter, correct_rpeaks
+from biosppy.signals.ecg import hamilton_segmenter, correct_rpeaks
 from biosppy.signals import tools as st
 from mne import make_fixed_length_events
 from scipy.interpolate import splev, splrep
 from itertools import compress
 import sleep_study as ss
-from ecgdetectors import Detectors
 
 THRESHOLD = 3
 NUM_WORKER = 8
 SN = 3984  # STUDY NUMBER
 FREQ = 256.0
-CHANNELS_NO = 4
 CHUNK_DURATION = 60.0
-detectors = Detectors(FREQ)
-OUT_FOLDER = 'C:\\Data\\p60'
+OUT_FOLDER = 'D:\\data256'
 channels = [
-    'ECG EKG2-EKG',
-    'RESP PTAF',
-    'SPO2',
+    "EOG LOC-M2", # 0
+    "EOG ROC-M1", # 1
+    "EEG F3-M2", # 2
+    "EEG F4-M1", # 3
+    "EEG C3-M2", # 4
+    "EEG C4-M1", # 5
+    "EEG O1-M2", # 6
+    "EEG O2-M1", # 7
+    "EEG CZ-O1", # 8
+    "ECG EKG2-EKG", # 9
+    "RESP PTAF", # 10
+    "RESP AIRFLOW", # 11
+    "RESP THORACIC", # 12
+    "RESP ABDOMINAL", # 13
+    "SPO2", # 14
+    "RATE", # 15
+    "CAPNO", # 16
+    "RESP RATE", #17
 ]
 
 APNEA_EVENT_DICT = {
@@ -142,8 +149,7 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
 
     fixed_events = make_fixed_length_events(raw, id=0, duration=CHUNK_DURATION, overlap=0.)
     epochs = mne.Epochs(raw, fixed_events, event_id=[0], tmin=0, tmax=tmax, baseline=None, preload=True, proj=False,
-                         verbose=None)
-    # picks=channels,
+                        picks=channels, verbose=None)
     epochs.load_data()
     if sfreq != FREQ:
         epochs = epochs.resample(FREQ, npad='auto', n_jobs=4, verbose=None)
@@ -164,7 +170,7 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
     total_hypopnea_event_second = 0
 
     for seq in range(data.shape[0]):
-        epoch_set = set(range(starts[seq], starts[seq] + 60))
+        epoch_set = set(range(starts[seq], starts[seq] + int(CHUNK_DURATION)))
         if is_apnea_available:
             apnea_seconds = len(apnea_events_set.intersection(epoch_set))
             total_apnea_event_second += apnea_seconds
@@ -186,50 +192,11 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
     labels_apnea = list(compress(labels_apnea, labels_wake))
     labels_hypopnea = list(compress(labels_hypopnea, labels_wake))
 
-    data, idxs = process_ECG(data)
-    data = data[idxs, :, :]
-    labels_apnea = list(array(labels_apnea)[idxs])
-    labels_hypopnea = list(array(labels_hypopnea)[idxs])
-
-    if len(idxs) > 10:
-        np.savez_compressed(
-            out_dir + '\\' + study + "_" + str(total_apnea_event_second) + "_" + str(total_hypopnea_event_second),
-            data=data, labels_apnea=labels_apnea, labels_hypopnea=labels_hypopnea)
+    np.savez_compressed(
+        out_dir + '\\' + study + "_" + str(total_apnea_event_second) + "_" + str(total_hypopnea_event_second),
+        data=data, labels_apnea=labels_apnea, labels_hypopnea=labels_hypopnea)
 
     return data.shape[0]
-
-
-def process_ECG(data):
-    idx = []
-    sleep_epoch_number = data.shape[0]
-    ir = 3  # INTERPOLATION RATE(3HZ)
-    tm = np.arange(0, CHUNK_DURATION, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION
-
-    X = np.zeros((sleep_epoch_number, 180, CHANNELS_NO))
-
-    for i in range(sleep_epoch_number):
-        signal = np.squeeze(data[i, 0])
-        filtered, _, _ = st.filter_signal(signal=signal, ftype="FIR", band="bandpass", order=int(0.3 * FREQ),
-                                          frequency=[3, 45], sampling_rate=FREQ, )
-        (rpeaks,) = hamilton_segmenter(signal=filtered, sampling_rate=FREQ)
-        (rpeaks,) = correct_rpeaks(signal=filtered, rpeaks=rpeaks, sampling_rate=FREQ, tol=0.05)
-        # plt.clf()
-        # plt.plot(rpeaks, signal[rpeaks], marker="o")
-        # plt.plot(signal)
-
-        if 40 < len(rpeaks) < 120 and np.max(signal) < 0.0015 and np.min(signal) > -0.0015:
-            # plt.show()
-            idx.append(i)
-            rri_tm, rri_signal = rpeaks[1:] / float(FREQ), np.diff(rpeaks) / float(FREQ)
-            ampl_tm, ampl_signal = rpeaks / float(FREQ), signal[rpeaks]
-            rri_interp_signal = splev(tm, splrep(rri_tm, rri_signal, k=3), ext=1)
-            amp_interp_signal = splev(tm, splrep(ampl_tm, ampl_signal, k=3), ext=1)
-            X[i, :, 0] = rri_interp_signal
-            X[i, :, 1] = amp_interp_signal
-
-        X[i, :, 2] = scipy.signal.resample(data[i, 1], int(CHUNK_DURATION * 3))
-        X[i, :, 3] = scipy.signal.resample(data[i, 2], int(CHUNK_DURATION * 3))
-    return X, idx
 
 
 if __name__ == "__main__":

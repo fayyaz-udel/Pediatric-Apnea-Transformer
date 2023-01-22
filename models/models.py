@@ -3,7 +3,7 @@ from keras.layers import Dense, Flatten, MaxPooling2D, Conv2D, BatchNormalizatio
 from keras.models import Sequential
 from keras.regularizers import l2
 
-from models.transformer import create_transformer_model
+from .transformer import create_transformer_model
 
 
 def create_ZFNet_BiLSTM_model(weight=1e-3):
@@ -361,15 +361,36 @@ model_dict = {
     "BiLSTM": create_BiLSTM_model(),
     "AlexNet": create_AlexNet_model(),
     "AlexNet_BiLSTM": create_AlexNet_BiLSTM_model(),
-    #"ZFNet": create_ZFNet_model(),
+    # "ZFNet": create_ZFNet_model(),
 }
 
 
 def get_model(config):
     if config["model_name"].split('_')[0] == "Transformer":
-        return create_transformer_model(input_shape=(180, 6),
+        return create_transformer_model(input_shape=(60*32, len(config["channels"])),
                                         num_patches=config["num_patches"], projection_dim=config["transformer_units"],
-                                        transformer_layers=config["transformer_layers"], num_heads=config["num_heads"], transformer_units=[config["transformer_units"]*2, config["transformer_units"]],
-                                        mlp_head_units=[256, 128], num_classes=1, drop_out=config["drop_out_rate"], reg=config["regression"], l2_weight=config["regularization_weight"])
+                                        transformer_layers=config["transformer_layers"], num_heads=config["num_heads"],
+                                        transformer_units=[config["transformer_units"] * 2,
+                                                           config["transformer_units"]],
+                                        mlp_head_units=[256, 128], num_classes=1, drop_out=config["drop_out_rate"],
+                                        reg=config["regression"], l2_weight=config["regularization_weight"])
     else:
         return model_dict.get(config["model_name"].split('_')[0])
+
+
+if __name__ == "__main__":
+    config = {
+        "model_name": "Transformer_129",
+        "regression": False,
+
+        "transformer_layers": 5,  # best 5
+        "drop_out_rate": 0.25,
+        "num_patches": 20,  # best
+        "transformer_units": 32,  # best 32
+        "regularization_weight": 0.001,  # best 0.001
+        "num_heads": 4,
+        "epochs": 100,  # best
+        "channels": [0, 1,2,3,4,5],
+    }
+    model = get_model(config)
+    print(model.summary())

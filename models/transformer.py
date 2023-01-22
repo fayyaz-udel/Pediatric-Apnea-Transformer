@@ -1,9 +1,11 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
+from keras.layers import Dense, Dropout, Reshape, LayerNormalization, MultiHeadAttention, Add, Flatten, Input, Layer, \
+    GlobalAveragePooling1D, AveragePooling1D, Concatenate
+from keras.regularizers import L2
 
 
-
-class Patches(tf.keras.layers.Layer):
+class Patches(Layer):
     def __init__(self, patch_size):
         super(Patches, self).__init__()
         self.patch_size = patch_size
@@ -24,16 +26,14 @@ class Patches(tf.keras.layers.Layer):
         return patches
 
 
-
-class PatchEncoder(tf.keras.layers.Layer):
+class PatchEncoder(Layer):
     def __init__(self, num_patches, projection_dim, l2_weight):
         super(PatchEncoder, self).__init__()
         self.projection_dim = projection_dim
         self.l2_weight = l2_weight
         self.num_patches = num_patches
-        self.projection = tf.keras.layers.Dense(units=projection_dim, kernel_regularizer=tf.keras.regularizers.L2(l2_weight),
-                                                bias_regularizer=tf.keras.regularizers.L2(l2_weight))
-
+        self.projection = Dense(units=projection_dim, kernel_regularizer=L2(l2_weight),
+                                bias_regularizer=L2(l2_weight))
 
     def call(self, patch):
         return self.projection(patch)
@@ -41,44 +41,50 @@ class PatchEncoder(tf.keras.layers.Layer):
 
 def mlp(x, hidden_units, dropout_rate, l2_weight):
     for _, units in enumerate(hidden_units):
-        x = tf.keras.layers.Dense(units, activation=None, kernel_regularizer=tf.keras.regularizers.L2(l2_weight), bias_regularizer=tf.keras.regularizers.L2(l2_weight))(x)
+        x = Dense(units, activation=None, kernel_regularizer=L2(l2_weight), bias_regularizer=L2(l2_weight))(x)
         x = tf.nn.gelu(x)
-        x = tf.keras.layers.Dropout(dropout_rate)(x)
+        x = Dropout(dropout_rate)(x)
     return x
 
 
 def create_transformer_model(input_shape, num_patches,
                              projection_dim, transformer_layers,
                              num_heads, transformer_units, mlp_head_units,
-                             num_classes, drop_out, reg, l2_weight):
+                             num_classes, drop_out, reg, l2_weight, demographic=False):
     if reg:
         activation = None
     else:
         activation = 'sigmoid'
-    inputs = tf.keras.layers.Input(shape=input_shape)
-    patch_size = 180 / num_patches
+    inputs = Input(shape=input_shape)
+    patch_size = input_shape[0] / num_patches
+    if demographic:
+        normalized_inputs = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
+                                                 beta_initializer="glorot_uniform",
+                                                 gamma_initializer="glorot_uniform")(inputs)
+        demo = inputs[:, 0, 4:6]
 
-    normalized_inputs = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
-                                                         beta_initializer="glorot_uniform",
-                                                         gamma_initializer="glorot_uniform")(inputs)
+    else:
+        normalized_inputs = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False, beta_initializer="glorot_uniform", gamma_initializer="glorot_uniform")(inputs)
 
+    # patches = Reshape((num_patches, -1))(normalized_inputs)
     patches = Patches(patch_size=patch_size)(normalized_inputs)
     encoded_patches = PatchEncoder(num_patches=num_patches, projection_dim=projection_dim, l2_weight=l2_weight)(patches)
     for i in range(transformer_layers):
-        x1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
-        attention_output = tf.keras.layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=projection_dim, dropout=i * drop_out, kernel_regularizer=tf.keras.regularizers.L2(l2_weight),
-            bias_regularizer=tf.keras.regularizers.L2(l2_weight))(x1, x1)
-        x2 = tf.keras.layers.Add()([attention_output, encoded_patches])
-        x3 = tf.keras.layers.LayerNormalization(epsilon=1e-6)(x2)
-        x3 = mlp(x3, transformer_units, i * drop_out, l2_weight)
-        encoded_patches = tf.keras.layers.Add()([x3, x2])
+        x1 = LayerNormalization(epsilon=1e-6)(encoded_patches)
+        attention_output = MultiHeadAttention(
+            num_heads=num_heads, key_dim=projection_dim, dropout=drop_out, kernel_regularizer=L2(l2_weight),  # i *
+            bias_regularizer=L2(l2_weight))(x1, x1)
+        x2 = Add()([attention_output, encoded_patches])
+        x3 = LayerNormalization(epsilon=1e-6)(x2)
+        x3 = mlp(x3, transformer_units, drop_out, l2_weight)  # i *
+        encoded_patches = Add()([x3, x2])
 
-    x = tf.keras.layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
-    x = tf.keras.layers.GlobalAveragePooling1D()(x)
+    x = LayerNormalization(epsilon=1e-6)(encoded_patches)
+    x = GlobalAveragePooling1D()(x)
+    # x = Concatenate()([x, demo])
     features = mlp(x, mlp_head_units, 0.0, l2_weight)
 
-    logits = tf.keras.layers.Dense(num_classes, kernel_regularizer=tf.keras.regularizers.L2(l2_weight), bias_regularizer=tf.keras.regularizers.L2(l2_weight),
-                          activation=activation)(features)
+    logits = Dense(num_classes, kernel_regularizer=L2(l2_weight), bias_regularizer=L2(l2_weight),
+                   activation=activation)(features)
 
     return tf.keras.Model(inputs=inputs, outputs=logits)

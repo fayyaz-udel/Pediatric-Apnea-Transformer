@@ -12,22 +12,24 @@ THRESHOLD = 1
 FOLD = 5
 
 
-def test(data_path, model_path, config):
-    data = np.load(data_path, allow_pickle=True)
+def test(config):
+    data = np.load(config["data_path"], allow_pickle=True)
     ############################################################################
     x, y_apnea, y_hypopnea = data['x'], data['y_apnea'], data['y_hypopnea']
     y = y_apnea + y_hypopnea
     for i in range(FOLD):
         x[i], y[i] = shuffle(x[i], y[i])
+        x[i] = np.nan_to_num(x[i], nan=-1)
         y[i] = np.where(y[i] >= THRESHOLD, 1, 0)
+        x[i] = x[i][:, :, config["channels"]]
     ############################################################################
     result = Result()
 
     for fold in range(FOLD):
-        x_test = np.nan_to_num(x[fold], nan=-1)
+        x_test = x[fold]
         y_test = y[fold]  # For MultiClass keras.utils.to_categorical(y[fold], num_classes=2)
 
-        model = tf.keras.models.load_model(model_path + str(fold),compile=False)
+        model = tf.keras.models.load_model(config["model_path"] + str(fold),compile=False)
 
         predict = model.predict(x_test)
         y_score = predict

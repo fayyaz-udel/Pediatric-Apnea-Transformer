@@ -3,9 +3,11 @@ import os
 import random
 import numpy as np
 import pandas as pd
+from scipy.signal import resample
 from sklearn.preprocessing import normalize
+
 THRESHOLD = 3
-PATH = "C:\\Data\\p60\\"
+PATH = "D:\\data\\"
 
 
 def load_data(path):
@@ -51,26 +53,41 @@ def load_data(path):
         for patient in fold:
             counter += 1
             print(counter)
+            if counter == 120:
+                print("OOO")
             for study in glob.glob(PATH + patient[0] + "_*"):
                 study_data = np.load(study)
 
                 signals = study_data['data']
-
-                identifier = study.split('\\')[-1].split('_')[0] + "_" + study.split('\\')[-1].split('_')[1]
-                bmi = np.ones((signals.shape[0], signals.shape[1])) * age_bmi[age_bmi['id'] == identifier].iat[
-                    0, 2] # * 0.01
-                age = np.ones((signals.shape[0], signals.shape[1])) * age_bmi[age_bmi['id'] == identifier].iat[
-                    0, 3] # * 0.01
-
-                data = np.zeros((signals.shape[0], signals.shape[1], 6))
-                data[:, :, 0] = np.clip(signals[:, :, 0],0,3)
-                data[:, :, 1] = np.clip(signals[:, :, 1] * 1000,0,2)
-                data[:, :, 2] = signals[:, :, 2] * 1000
-                data[:, :, 3] = (signals[:, :, 3] - 90) / 10
-                data[:, :, 4] = np.nan_to_num(bmi, nan=72)  # Average
-                data[:, :, 5] = np.nan_to_num(age, nan=105)  # Average
                 labels_apnea = study_data['labels_apnea']
                 labels_hypopnea = study_data['labels_hypopnea']
+
+                # identifier = study.split('\\')[-1].split('_')[0] + "_" + study.split('\\')[-1].split('_')[1]
+                # bmi = np.ones((signals.shape[0], signals.shape[2])) * age_bmi[age_bmi['id'] == identifier].iat[
+                #     0, 2] # * 0.01
+                # age = np.ones((signals.shape[0], signals.shape[2])) * age_bmi[age_bmi['id'] == identifier].iat[
+                #     0, 3] # * 0.01
+
+                y_c = labels_apnea + labels_hypopnea
+                neg_samples = np.where(y_c == 0)[0]
+                pos_samples = list(np.where(y_c > 0)[0])
+                ratio = len(pos_samples) / len(neg_samples)
+                neg_survived = []
+                for s in range(len(neg_samples)):
+                    if random.random() < ratio:
+                        neg_survived.append(neg_samples[s])
+                samples = neg_survived + pos_samples
+                signals = signals[samples, :, :]
+                labels_apnea = labels_apnea[samples]
+                labels_hypopnea = labels_hypopnea[samples]
+
+                data = np.zeros((signals.shape[0], 60 * 32, signals.shape[1]))
+                for i in range(signals.shape[0]):
+                    for j in range(signals.shape[1]):
+                        data[i, :, j] = signals[i, j, :]  # resample(signals[i, j, :], 60 * 32)
+                # data[:, :, 3] = np.nan_to_num(bmi, nan=72)  # Average
+                # data[:, :, 4] = np.nan_to_num(age, nan=105)  # Average
+
                 if first:
                     aggregated_data = data
                     aggregated_label_apnea = labels_apnea
@@ -99,14 +116,11 @@ def downsample(x, y_apnea, y_hypopnea):
         neg_samples = np.where(y_c == 0)[0]
         pos_samples = list(np.where(y_c > 0)[0])
         ratio = len(pos_samples) / len(neg_samples)
-        print("ratio is:" + str(ratio))
         neg_survived = []
         for s in range(len(neg_samples)):
             if random.random() < ratio:
                 neg_survived.append(neg_samples[s])
-
         samples = neg_survived + pos_samples
-
         x[f] = x_c[samples, :, :]
         y_apnea[f] = y_apnea_c[samples]
         y_hypopnea[f] = y_hypopnea_c[samples]
@@ -116,5 +130,4 @@ def downsample(x, y_apnea, y_hypopnea):
 
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
-    x, y_apnea, y_hypopnea = downsample(x, y_apnea, y_hypopnea)
-    np.savez_compressed("C:\\Data\\novel", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
+    np.savez_compressed("C:\\Data\\raw_allscipy", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
