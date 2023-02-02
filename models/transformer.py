@@ -34,9 +34,13 @@ class PatchEncoder(Layer):
         self.num_patches = num_patches
         self.projection = Dense(units=projection_dim, kernel_regularizer=L2(l2_weight),
                                 bias_regularizer=L2(l2_weight))
+        self.position_embedding = tf.keras.layers.Embedding(
+            input_dim=num_patches, output_dim=projection_dim)
 
     def call(self, patch):
-        return self.projection(patch)
+        positions = tf.range(start=0, limit=self.num_patches, delta=1)
+        encoded = self.projection(patch) # + self.position_embedding(positions)
+        return encoded
 
 
 def mlp(x, hidden_units, dropout_rate, l2_weight):
@@ -59,18 +63,20 @@ def create_transformer_model(input_shape, num_patches,
     patch_size = input_shape[0] / num_patches
     if demographic:
         normalized_inputs = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
-                                                 beta_initializer="glorot_uniform",
-                                                 gamma_initializer="glorot_uniform")(inputs)
+                                                             beta_initializer="glorot_uniform",
+                                                             gamma_initializer="glorot_uniform")(inputs)
         demo = inputs[:, 0, 4:6]
 
     else:
-        normalized_inputs = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False, beta_initializer="glorot_uniform", gamma_initializer="glorot_uniform")(inputs)
+        normalized_inputs = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
+                                                             beta_initializer="glorot_uniform",
+                                                             gamma_initializer="glorot_uniform")(inputs)
 
     # patches = Reshape((num_patches, -1))(normalized_inputs)
     patches = Patches(patch_size=patch_size)(normalized_inputs)
     encoded_patches = PatchEncoder(num_patches=num_patches, projection_dim=projection_dim, l2_weight=l2_weight)(patches)
     for i in range(transformer_layers):
-        x1 = LayerNormalization(epsilon=1e-6)(encoded_patches)
+        x1 = encoded_patches # LayerNormalization(epsilon=1e-6)(encoded_patches) # TODO
         attention_output = MultiHeadAttention(
             num_heads=num_heads, key_dim=projection_dim, dropout=drop_out, kernel_regularizer=L2(l2_weight),  # i *
             bias_regularizer=L2(l2_weight))(x1, x1)

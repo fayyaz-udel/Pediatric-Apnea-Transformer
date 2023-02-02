@@ -89,14 +89,23 @@ class Result:
         out_str += str(self.auroc_list) + " \n"
         out_str += str(self.auprc_list) + " \n"
         out_str += str("Accuracy: %.2f -+ %.3f" % (np.mean(self.accuracy_list), np.std(self.accuracy_list))) + " \n"
+        out_str += str("Precision: %.2f -+ %.3f" % (np.mean(self.precision_list), np.std(self.precision_list))) + " \n"
         out_str += str(
-            "Sensitivity: %.2f -+ %.3f" % (np.mean(self.sensitivity_list), np.std(self.sensitivity_list))) + " \n"
+            "Recall: %.2f -+ %.3f" % (np.mean(self.sensitivity_list), np.std(self.sensitivity_list))) + " \n"
         out_str += str(
             "Specifity: %.2f -+ %.3f" % (np.mean(self.specificity_list), np.std(self.specificity_list))) + " \n"
         out_str += str("F1: %.2f -+ %.3f" % (np.mean(self.f1_list), np.std(self.f1_list))) + " \n"
-        out_str += str("Precision: %.2f -+ %.3f" % (np.mean(self.precision_list), np.std(self.precision_list))) + " \n"
         out_str += str("AUROC: %.2f -+ %.3f" % (np.mean(self.auroc_list), np.std(self.auroc_list))) + " \n"
         out_str += str("AUPRC: %.2f -+ %.3f" % (np.mean(self.auprc_list), np.std(self.auprc_list))) + " \n"
+
+        out_str += str("$ %.1f \pm %.1f$" % (np.mean(self.accuracy_list), np.std(self.accuracy_list))) + ", "
+        out_str += str("$%.1f \pm %.1f$" % (np.mean(self.precision_list), np.std(self.precision_list))) + ", "
+        out_str += str("$%.1f \pm %.1f$" % (np.mean(self.sensitivity_list), np.std(self.sensitivity_list))) + ", "
+        out_str += str("$%.1f \pm %.1f$" % (np.mean(self.specificity_list), np.std(self.specificity_list))) + ", "
+        out_str += str("$%.1f \pm %.1f$" % (np.mean(self.f1_list), np.std(self.f1_list))) + ", "
+        out_str += str("$%.1f \pm %.1f$" % (np.mean(self.auroc_list), np.std(self.auroc_list))) + ", "
+        out_str += str("$%.1f \pm %.1f$" % (np.mean(self.auprc_list), np.std(self.auprc_list))) + ", "
+
         return out_str
 
     def print(self):

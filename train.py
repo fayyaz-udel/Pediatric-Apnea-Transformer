@@ -12,7 +12,7 @@ FOLD = 5
 
 
 def lr_schedule(epoch, lr):
-    if epoch > 70 and (epoch - 1) % 10 == 0:
+    if epoch > 100 and (epoch - 1) % 10 == 0:
         lr *= 0.5
     # print("Learning rate: ", lr)
     return lr
@@ -38,23 +38,6 @@ def train(config):
 
         x[i] = x[i][:, :, config["channels"]]  # CHANNEL SELECTION
 
-        # ch0 = x[i][:, :, 0]
-        # ch1 = x[i][:, :, 1]
-        #
-        # per0_99 = np.percentile(ch0, 99.9)
-        # per1_99 = np.percentile(ch1, 99.9)
-        #
-        # per0_1 = np.percentile(ch0, 0.1)
-        # per1_1 = np.percentile(ch1, 0.1)
-        #
-        # ch0[ch0 > per0_99] = per0_99
-        # ch0[ch0 < per0_1] = per0_1
-        #
-        # ch1[ch1 > per1_99] = per1_99
-        # ch1[ch1 < per1_1] = per1_1
-        #
-        # x[i][:, :, 0] = (ch0 - per0_1) / (per0_99 - per0_1)
-        # x[i][:, :, 1] = (ch1 - per1_1) / (per1_99 - per1_1)
     ########################################################################################
     for fold in range(FOLD):
         first = True
@@ -76,11 +59,11 @@ def train(config):
         model = get_model(config)
         if config["regression"]:
             model.compile(optimizer="adam", loss=BinaryCrossentropy())
-            early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+            early_stopper = EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True)
 
         else:
-            model.compile(optimizer="adam", loss=BinaryCrossentropy(), metrics=[metrics.Precision(), metrics.Recall()])
-            early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+            model.compile(optimizer="adam", loss=BinaryCrossentropy(), metrics=[keras.metrics.Precision(), keras.metrics.Recall()])
+            early_stopper = EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True)
 
         lr_scheduler = LearningRateScheduler(lr_schedule)
         history = model.fit(x=x_train, y=y_train, batch_size=256, epochs=config["epochs"], validation_split=0.1,

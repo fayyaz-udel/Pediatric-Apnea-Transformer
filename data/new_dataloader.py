@@ -4,10 +4,30 @@ import random
 import numpy as np
 import pandas as pd
 from scipy.signal import resample
-from sklearn.preprocessing import normalize
+from biosppy.signals.ecg import hamilton_segmenter, correct_rpeaks
+from biosppy.signals import tools as st
+from scipy.interpolate import splev, splrep
 
 THRESHOLD = 3
-PATH = "D:\\data\\"
+PATH = "D:\\data256\\"
+FREQ = 256
+def extract_rri(signal, ir, CHUNK_DURATION):
+    tm = np.arange(0, CHUNK_DURATION, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION
+
+    filtered, _, _ = st.filter_signal(signal=signal, ftype="FIR", band="bandpass", order=int(0.3 * FREQ),
+                                      frequency=[3, 45], sampling_rate=FREQ, )
+    (rpeaks,) = hamilton_segmenter(signal=filtered, sampling_rate=FREQ)
+    (rpeaks,) = correct_rpeaks(signal=filtered, rpeaks=rpeaks, sampling_rate=FREQ, tol=0.05)
+
+    if 4 < len(rpeaks) < 200: # and np.max(signal) < 0.0015 and np.min(signal) > -0.0015:
+        rri_tm, rri_signal = rpeaks[1:] / float(FREQ), np.diff(rpeaks) / float(FREQ)
+        ampl_tm, ampl_signal = rpeaks / float(FREQ), signal[rpeaks]
+        rri_interp_signal = splev(tm, splrep(rri_tm, rri_signal, k=3), ext=1)
+        amp_interp_signal = splev(tm, splrep(ampl_tm, ampl_signal, k=3), ext=1)
+
+        return np.clip(rri_interp_signal, 0, 2), np.clip(amp_interp_signal, -0.001, 0.002)
+    else:
+        return np.zeros((32 * 60)), np.zeros((32 * 60))
 
 
 def load_data(path):
@@ -53,8 +73,6 @@ def load_data(path):
         for patient in fold:
             counter += 1
             print(counter)
-            if counter == 120:
-                print("OOO")
             for study in glob.glob(PATH + patient[0] + "_*"):
                 study_data = np.load(study)
 
@@ -81,10 +99,13 @@ def load_data(path):
                 labels_apnea = labels_apnea[samples]
                 labels_hypopnea = labels_hypopnea[samples]
 
-                data = np.zeros((signals.shape[0], 60 * 32, signals.shape[1]))
-                for i in range(signals.shape[0]):
-                    for j in range(signals.shape[1]):
-                        data[i, :, j] = signals[i, j, :]  # resample(signals[i, j, :], 60 * 32)
+                data = np.zeros((signals.shape[0], 60 * 32, signals.shape[1]+2))
+
+                for i in range(signals.shape[0]): # for each epoch
+                    data[i, :, -1],data[i, :, -2] = extract_rri(signals[i, 9, :],32, 60.0)
+                    for j in range(signals.shape[1]): # for each signal
+                        data[i, :, j] = resample(signals[i, j, :], 60 * 32)
+
                 # data[:, :, 3] = np.nan_to_num(bmi, nan=72)  # Average
                 # data[:, :, 4] = np.nan_to_num(age, nan=105)  # Average
 
@@ -130,4 +151,4 @@ def downsample(x, y_apnea, y_hypopnea):
 
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
-    np.savez_compressed("C:\\Data\\raw_allscipy", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
+    np.savez_compressed("C:\\Data\\raw_all_RR", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
