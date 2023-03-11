@@ -34,16 +34,18 @@ from scipy.interpolate import splev, splrep
 # RRI
 # Ramp
 # Demo
-#"EOG"
+# "EOG"
 from data.tfrec import write_signals_to_tfr_short
 
-SIGS = [2, 3, 4, 5 ,6,7,8,14, 16]
+SIGS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 s_count = len(SIGS)
 
 THRESHOLD = 3
-PATH = "D:\\data256\\"
+PATH = "D:\\data256s\\"
 FREQ = 256
 TARGET_FREQ = 32
+
+
 def extract_rri(signal, ir, CHUNK_DURATION):
     tm = np.arange(0, CHUNK_DURATION, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION
 
@@ -52,7 +54,7 @@ def extract_rri(signal, ir, CHUNK_DURATION):
     (rpeaks,) = hamilton_segmenter(signal=filtered, sampling_rate=FREQ)
     (rpeaks,) = correct_rpeaks(signal=filtered, rpeaks=rpeaks, sampling_rate=FREQ, tol=0.05)
 
-    if 4 < len(rpeaks) < 200: # and np.max(signal) < 0.0015 and np.min(signal) > -0.0015:
+    if 4 < len(rpeaks) < 200:  # and np.max(signal) < 0.0015 and np.min(signal) > -0.0015:
         rri_tm, rri_signal = rpeaks[1:] / float(FREQ), np.diff(rpeaks) / float(FREQ)
         ampl_tm, ampl_signal = rpeaks / float(FREQ), signal[rpeaks]
         rri_interp_signal = splev(tm, splrep(rri_tm, rri_signal, k=3), ext=1)
@@ -113,7 +115,6 @@ def load_data(path):
                 labels_apnea = study_data['labels_apnea']
                 labels_hypopnea = study_data['labels_hypopnea']
 
-
                 identifier = study.split('\\')[-1].split('_')[0] + "_" + study.split('\\')[-1].split('_')[1]
                 demo_arr = demo[demo['id'] == identifier].drop(columns=['id']).to_numpy().squeeze()
 
@@ -131,9 +132,9 @@ def load_data(path):
                 labels_hypopnea = labels_hypopnea[samples]
 
                 data = np.zeros((signals.shape[0], 60 * TARGET_FREQ, s_count + 3))
-                for i in range(signals.shape[0]): # for each epoch
-                    data[i,:len(demo_arr),-1] = demo_arr
-                    data[i, :, -2],data[i, :, -3] = extract_rri(signals[i, 9, :],TARGET_FREQ, 60.0)
+                for i in range(signals.shape[0]):  # for each epoch
+                    data[i, :len(demo_arr), -1] = demo_arr
+                    data[i, :, -2], data[i, :, -3] = extract_rri(signals[i, 9, :], TARGET_FREQ, 60.0)
                     for j in range(s_count):  # for each signal
                         data[i, :, j] = resample(signals[i, SIGS[j], :], 60 * TARGET_FREQ)
 
@@ -147,36 +148,13 @@ def load_data(path):
                     aggregated_label_apnea = np.concatenate((aggregated_label_apnea, labels_apnea), axis=0)
                     aggregated_label_hypopnea = np.concatenate((aggregated_label_hypopnea, labels_hypopnea), axis=0)
 
-        write_signals_to_tfr_short(aggregated_data, aggregated_label_apnea, aggregated_label_hypopnea, filename="fold" + str(idx))
+        write_signals_to_tfr_short(aggregated_data, aggregated_label_apnea, aggregated_label_hypopnea,
+                                   filename="fold" + str(idx))
         # x.append(aggregated_data)
         # y_apnea.append(aggregated_label_apnea)
         # y_hypopnea.append(aggregated_label_hypopnea)
 
     return x, y_apnea, y_hypopnea
-
-
-def downsample(x, y_apnea, y_hypopnea):
-    for f in range(5):
-        print("down sampling fold " + str(f))
-        x_c = x[f]
-        y_apnea_c = y_apnea[f]
-        y_hypopnea_c = y_hypopnea[f]
-        y_c = y_apnea_c + y_hypopnea_c
-
-        neg_samples = np.where(y_c == 0)[0]
-        pos_samples = list(np.where(y_c > 0)[0])
-        ratio = len(pos_samples) / len(neg_samples)
-        neg_survived = []
-        for s in range(len(neg_samples)):
-            if random.random() < ratio:
-                neg_survived.append(neg_samples[s])
-        samples = neg_survived + pos_samples
-        x[f] = x_c[samples, :, :]
-        y_apnea[f] = y_apnea_c[samples]
-        y_hypopnea[f] = y_hypopnea_c[samples]
-
-    return x, y_apnea, y_hypopnea
-
 
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
