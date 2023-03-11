@@ -7,12 +7,16 @@ import metrics
 from metrics import Precision, Recall
 from models.models import get_model
 
+import tensorflow as tf
+gpus = tf.config.experimental.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(gpus[0], True)
+
 THRESHOLD = 1
 FOLD = 5
 
 
 def lr_schedule(epoch, lr):
-    if epoch > 100 and (epoch - 1) % 10 == 0:
+    if epoch > 80 and (epoch - 1) % 10 == 0:
         lr *= 0.5
     # print("Learning rate: ", lr)
     return lr
@@ -55,7 +59,7 @@ def train(config):
         # y_test = keras.utils.to_categorical(y_test, num_classes=2) # For MultiClass
         ################################################################################################################
         # Huber(), "mean_squared_error", "mean_absolute_error" Precision(from_logits=True), Recall(from_logits=True)
-        keras.backend.clear_session()
+
         model = get_model(config)
         if config["regression"]:
             model.compile(optimizer="adam", loss=BinaryCrossentropy())
@@ -70,4 +74,5 @@ def train(config):
                             callbacks=[early_stopper, lr_scheduler])
         ################################################################################################################
         model.save(config["model_path"] + str(fold))
+        keras.backend.clear_session()
 

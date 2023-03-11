@@ -1,13 +1,14 @@
 import keras
 from keras import Input, Model
 from keras.layers import Dense, Flatten, MaxPooling2D, Conv2D, BatchNormalization, LSTM, Bidirectional, Permute, \
-    Reshape, GRU, Conv1D, MaxPooling1D, Activation, Dropout, GlobalAveragePooling1D, multiply
+    Reshape, GRU, Conv1D, MaxPooling1D, Activation, Dropout, GlobalAveragePooling1D, multiply, MultiHeadAttention, Add, \
+    LayerNormalization
 from keras.models import Sequential
 from keras.activations import relu
 from keras.regularizers import l2
 import tensorflow_addons as tfa
 
-from .transformer import create_transformer_model
+from .transformer import create_transformer_model, mlp
 
 
 def create_ZFNet_BiLSTM_model(weight=1e-3):
@@ -380,19 +381,22 @@ def create_58model(input_a_shape, weight=1e-3):
     input1 = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
                                                          beta_initializer="glorot_uniform",
                                                          gamma_initializer="glorot_uniform")(input1)
-    x1 = Conv1D(32, 128, padding='same')(input1)
-    x1 = MaxPooling1D(pool_size=2)(x1)
-    x1 = Conv1D(32, 128)(x1)
-    x1 = MaxPooling1D(pool_size=2)(x1)
-    # x1 = Conv1D(32, 128)(x1)
-    # x1 = MaxPooling1D(pool_size=2)(x1)
+    x1 = Conv1D(16, 128, activation='relu')(input1)
+    x1 = BatchNormalization()(x1)
+    x1 = MaxPooling1D()(x1)
+    x1 = Conv1D(8, 128, activation='relu')(x1)
+    x1 = BatchNormalization()(x1)
+    x1 = MaxPooling1D()(x1)
+    x1 = Conv1D(4, 128, activation='relu')(x1)
+    x1 = BatchNormalization()(x1)
+    x1 = MaxPooling1D()(x1)
 
     x1 = LSTM(32, return_sequences=True)(x1)
     x1 = LSTM(16, return_sequences=True)(x1)
-    x1 = LSTM(8, return_sequences=True)(x1)
+    x1 = LSTM(4, return_sequences=True)(x1)
     x1 = Flatten()(x1)
-    x1 = Dense(64, activation='relu')(x1)
-    x1 = Dense(64, activation='relu')(x1)
+    x1 = Dense(32, activation='relu')(x1)
+    x1 = Dense(32, activation='relu')(x1)
     outputs = Dense(1, activation='sigmoid')(x1)
 
     model = Model(inputs=input1, outputs=outputs)
@@ -406,28 +410,41 @@ def create_58model(input_a_shape, weight=1e-3):
 
 
 
-def create_100model(input_a_shape, weight=1e-3):
+def create_100model(input_a_shape):
 
     input1 = Input(shape=input_a_shape)
     input1 = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
                                                          beta_initializer="glorot_uniform",
                                                          gamma_initializer="glorot_uniform")(input1)
     x1 = Conv1D(32, 128)(input1)
-    x1 = MaxPooling1D(pool_size=6)(x1)
     x1 = Conv1D(8, 128)(x1)
-    x1 = MaxPooling1D(pool_size=4)(x1)
 
     # Channel-wise attention module
     concat =x1
     squeeze = GlobalAveragePooling1D()(concat)
-    excitation = Dense(160, activation='relu')(squeeze)
-    excitation = Dense(336, activation='relu')(excitation)
-    excitation = Reshape((1, 336))(excitation)
-    scale = multiply([Reshape((1,336))(concat), excitation])
-    x = GlobalAveragePooling1D()(scale)
-    outputs = Dense(1, activation='sigmoid', name="Output_Layer")(x)
-    model = Model(inputs=input1, outputs=outputs)
+    excitation = Dense(128, activation='relu')(squeeze)
+    excitation = Dense(64, activation='sigmoid')(excitation)
+    excitation = Reshape((1, 64))(excitation)
+
+    for i in range(4):
+        x1 = excitation  # LayerNormalization(epsilon=1e-6)(encoded_patches) # TODO
+        attention_output = MultiHeadAttention(
+            num_heads=4, key_dim=64)(x1, x1)
+        x2 = Add()([attention_output, excitation])
+        x3 = LayerNormalization(epsilon=1e-6)(x2)
+        x3 = mlp(x3, [128,64], 0, 0)  # i *
+        encoded_patches = Add()([x3, x2])
+
+    x = LayerNormalization(epsilon=1e-6)(encoded_patches)
+    x = GlobalAveragePooling1D()(x)
+    # x = Concatenate()([x, demo])
+    features = mlp(x, [256,128], 0.0, 0)
+
+    logits = Dense(1, activation='sigmoid')(features)
+    model = Model(inputs=input1, outputs=logits)
     return model
+
+
 def create_GRU_model():
     model = Sequential()
     model.add(GRU(90, return_sequences=True, input_shape=(180, 6)))
@@ -469,17 +486,17 @@ def get_model(config):
 
 if __name__ == "__main__":
     config = {
-        "model_name": "58_129",
+        "model_name": "100",
         "regression": False,
 
-        "transformer_layers": 5,  # best 5
+        "transformer_layers": 4,  # best 5
         "drop_out_rate": 0.25,
         "num_patches": 20,  # best
         "transformer_units": 32,  # best 32
         "regularization_weight": 0.001,  # best 0.001
         "num_heads": 4,
         "epochs": 100,  # best
-        "channels": [0, 1, 2, 3, 4, 5],
+        "channels": [14, 18,19,20],
     }
     model = get_model(config)
     print(model.summary())

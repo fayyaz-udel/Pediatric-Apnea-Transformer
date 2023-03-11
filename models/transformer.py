@@ -5,6 +5,10 @@ from keras.layers import Dense, Dropout, Reshape, LayerNormalization, MultiHeadA
 from keras.regularizers import L2
 
 
+gpus = tf.config.experimental.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(gpus[0], True)
+tf.keras.backend.clear_session()
+
 class Patches(Layer):
     def __init__(self, patch_size):
         super(Patches, self).__init__()
@@ -64,8 +68,8 @@ def create_transformer_model(input_shape, num_patches,
     if demographic:
         normalized_inputs = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
                                                              beta_initializer="glorot_uniform",
-                                                             gamma_initializer="glorot_uniform")(inputs)
-        demo = inputs[:, 0, 4:6]
+                                                             gamma_initializer="glorot_uniform")(inputs[:,:,:-1])
+        demo = inputs[:, :12, -1]
 
     else:
         normalized_inputs = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
@@ -87,7 +91,7 @@ def create_transformer_model(input_shape, num_patches,
 
     x = LayerNormalization(epsilon=1e-6)(encoded_patches)
     x = GlobalAveragePooling1D()(x)
-    # x = Concatenate()([x, demo])
+    #x = Concatenate()([x, demo])
     features = mlp(x, mlp_head_units, 0.0, l2_weight)
 
     logits = Dense(num_classes, kernel_regularizer=L2(l2_weight), bias_regularizer=L2(l2_weight),

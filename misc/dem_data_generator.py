@@ -27,7 +27,7 @@ ss['id'] = ss['STUDY_PAT_ID'].astype(str) + "_" + ss['SLEEP_STUDY_ID'].astype(st
 
 
 ss['PCORI_GENDER_CD'] = ss['PCORI_GENDER_CD'].map({'F': 0, 'M': 1, 'UN': -1})
-ss = ss[['id', 'bmi', 'age', 'diff', 'PCORI_GENDER_CD', "PCORI_RACE_CD", 'PCORI_HISPANIC_CD']]
+ss = ss[['id', 'bmi', 'age', 'PCORI_GENDER_CD', "PCORI_RACE_CD", 'PCORI_HISPANIC_CD']]
 ss = ss.join(pd.get_dummies(ss["PCORI_RACE_CD"]))
 ss =ss.drop(columns=["PCORI_RACE_CD"])
 ss['PCORI_HISPANIC_CD'] = ss['PCORI_HISPANIC_CD'].map({'N': 0, 'Y': 1, 'UN': -1, 'NI': -1})
@@ -36,4 +36,4 @@ ss['bmi'] = ss['bmi']/100
 ss['age'] = ss['age']/300
 
 
-ss.to_csv("result.csv")
+ss.to_csv("result.csv", index=False)
