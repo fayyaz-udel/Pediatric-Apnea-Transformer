@@ -37,11 +37,11 @@ from scipy.interpolate import splev, splrep
 # "EOG"
 from data.tfrec import write_signals_to_tfr_short
 
-SIGS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+SIGS = [9, 10, 11, 12, 13, 14, 15, 16, 17]
 s_count = len(SIGS)
 
 THRESHOLD = 3
-PATH = "D:\\data256s\\"
+PATH = "D:\\data256\\"
 FREQ = 256
 TARGET_FREQ = 32
 
@@ -155,6 +155,7 @@ def load_data(path):
         # y_hypopnea.append(aggregated_label_hypopnea)
 
     return x, y_apnea, y_hypopnea
+
 
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)

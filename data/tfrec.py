@@ -61,14 +61,15 @@ def parse_tfr_element(element):
     data = {'height': tf.io.FixedLenFeature([], tf.int64),
             'width': tf.io.FixedLenFeature([], tf.int64),
             'signal': tf.io.FixedLenFeature([], tf.string),
-            'label': tf.io.FixedLenFeature([], tf.int64)}
+            'label1': tf.io.FixedLenFeature([], tf.int64),
+            'label2': tf.io.FixedLenFeature([], tf.int64)}
     content = tf.io.parse_single_example(element, data)
 
-    label, signal, height, width = content['label'], content['signal'], content['height'], content['width']
+    label1, label2, signal, height, width = content['label1'], content['label2'], content['signal'], content['height'], content['width']
 
     feature = tf.io.parse_tensor(signal, out_type=tf.int16)
     feature = tf.reshape(feature, shape=[height, width])
-    return (feature, label)
+    return feature, label1+label2 > 0
 
 
 def get_dataset_small(filename):

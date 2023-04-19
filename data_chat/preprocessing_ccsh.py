@@ -1,90 +1,76 @@
-import concurrent.futures
+import glob
+import os
 from datetime import datetime
-import pandas as pd
+from itertools import compress
+
 import mne
 import numpy as np
-import scipy
-from biosppy.signals.ecg import hamilton_segmenter, correct_rpeaks
+import pandas as pd
 from biosppy.signals import tools as st
+from biosppy.signals.ecg import hamilton_segmenter, correct_rpeaks
 from mne import make_fixed_length_events
 from scipy.interpolate import splev, splrep
-from itertools import compress
+
 import sleep_study as ss
 
 THRESHOLD = 3
-NUM_WORKER = 8
+NUM_WORKER = 1
 SN = 3984  # STUDY NUMBER
-FREQ = 32.0
+FREQ = 128.0
 CHUNK_DURATION = 30.0
-OUT_FOLDER = 'D:\\data32'
+OUT_FOLDER = 'E:\\data_cchs_baseline_128'
+
 channels = [
-    "EOG LOC-M2",  # 0
-    "EOG ROC-M1",  # 1
-    "EEG F3-M2",  # 2
-    "EEG F4-M1",  # 3
-    "EEG C3-M2",  # 4
-    "EEG C4-M1",  # 5
-    "EEG O1-M2",  # 6
-    "EEG O2-M1",  # 7
-    "EEG CZ-O1",  # 8
-    "ECG EKG2-EKG",  # 9
-    "RESP PTAF",  # 10
-    "RESP AIRFLOW",  # 11
-    "RESP THORACIC",  # 12
-    "RESP ABDOMINAL",  # 13
-    "SPO2",  # 14
-    "RATE",  # 15
-    "CAPNO",  # 16
-    "RESP RATE",  # 17
+    'LOC', # 0
+    'ROC', # 1
+
+    'C3', # 2
+    'C4', # 3
+    'A1', # 4
+    'A2', # 5
+
+    'ECG1', # 6
+    'ECG2', # 7
+
+    'ABDO EFFORT', # 8
+    'THOR EFFORT', # 9
+
+    'SPO2', # 10
+    'AIRFLOW', # 11
 ]
 
+
+
+
 APNEA_EVENT_DICT = {
-    "Obstructive Apnea": 2,
-    "Central Apnea": 2,
-    "Mixed Apnea": 2,
-    "apnea": 2,
-    "obstructive apnea": 2,
-    "central apnea": 2,
-    "apnea": 2,
-    "Apnea": 2,
+    "Obstructive apnea": 2,
+    "Central apnea": 2,
 }
 
 HYPOPNEA_EVENT_DICT = {
-    "Obstructive Hypopnea": 1,
     "Hypopnea": 1,
-    "hypopnea": 1,
-    "Mixed Hypopnea": 1,
-    "Central Hypopnea": 1,
 }
 
 POS_EVENT_DICT = {
-    "Obstructive Hypopnea": 1,
     "Hypopnea": 1,
-    "hypopnea": 1,
-    "Mixed Hypopnea": 1,
-    "Central Hypopnea": 1,
 
-    "Obstructive Apnea": 2,
-    "Central Apnea": 2,
-    "Mixed Apnea": 2,
-    "apnea": 2,
-    "obstructive apnea": 2,
-    "central apnea": 2,
-    "Apnea": 2,
+    "Obstructive apnea": 2,
+    "Central apnea": 2,
 }
 
 NEG_EVENT_DICT = {
-    'Sleep stage N1': 0,
-    'Sleep stage N2': 0,
-    'Sleep stage N3': 0,
-    'Sleep stage R': 0,
+    'Stage 1 sleep': 0,
+    'Stage 2 sleep': 0,
+    'Stage 3 sleep': 0,
+    'REM sleep': 0,
 }
 
 WAKE_DICT = {
-    "Sleep stage W": 10
+    "Wake": 10
 }
 
 mne.set_log_file('log.txt', overwrite=False)
+
 
 ########################################## Annotation Modifier functions ##########################################
 def identity(df):
@@ -108,6 +94,36 @@ def change_duration(df, label_dict=POS_EVENT_DICT, duration=CHUNK_DURATION):
     return df
 
 
+def load_study_chat(edf_path, annotation_path, annotation_func, preload=False, exclude=[], verbose='CRITICAL'):
+    raw = mne.io.edf.edf.RawEDF(input_fname=edf_path, exclude=exclude, preload=preload, verbose=verbose)
+
+    # patient_id, study_id = name.split('_')
+
+    # tmp = ss.info.SLEEP_STUDY
+    # date = tmp[(tmp.STUDY_PAT_ID == int(patient_id))
+    #          & (tmp.SLEEP_STUDY_ID == int(study_id))] \
+    #                  .SLEEP_STUDY_START_DATETIME.values[0] \
+    #                  .split()[0]
+
+    # time = str(raw.info['meas_date']).split()[1][:-6]
+    #
+    # new_datetime = parser.parse(date + ' ' + time + ' UTC') \
+    #                      .replace(tzinfo=timezone.utc)
+    #
+    # raw.set_meas_date(new_datetime)
+    # raw._raw_extras[0]['meas_date'] = new_datetime
+
+    df = annotation_func(pd.read_csv(annotation_path, sep='\t'))
+    annotations = mne.Annotations(df.onset, df.duration, df.description)  # ,orig_time=new_datetime)
+
+    raw.set_annotations(annotations)
+
+    raw.rename_channels({name: name.upper() for name in raw.info['ch_names']})
+
+    return raw
+
+
+################################################# Extractor functions ##################################################
 def extract_rri(signal, ir):
     tm = np.arange(0, CHUNK_DURATION, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION
 
@@ -127,18 +143,18 @@ def extract_rri(signal, ir):
         return np.zeros((32 * 60)), np.zeros((32 * 60))
 
 
-def preprocess(i, annotation_modifier, out_dir, ahi_dict):
+def preprocess(path, annotation_modifier, out_dir):
     is_apnea_available, is_hypopnea_available = True, True
-    study = ss.data.study_list[i]
-    raw = ss.data.load_study(study, annotation_modifier, verbose=True)
+    raw = load_study_chat(path[0], path[1], annotation_modifier, verbose=True)
     ########################################   CHECK CRITERIA FOR SS   #################################################
     if not all([name in raw.ch_names for name in channels]):
-        print("study " + str(study) + " skipped since insufficient channels")
+        print([name in raw.ch_names for name in channels])
+        print("study " + os.path.basename(path[0]) + " skipped since insufficient channels")
         return 0
 
-    if ahi_dict.get(study, 0) < THRESHOLD:
-        print("study " + str(study) + " skipped since low AHI ---  AHI = " + str(ahi_dict.get(study, 0)))
-        return 0
+    # if ahi_dict.get(study, 0) < THRESHOLD:
+    #     print("study " + str(study) + " skipped since low AHI ---  AHI = " + str(ahi_dict.get(study, 0)))
+    #     return 0
 
     try:
         apnea_events, event_ids = mne.events_from_annotations(raw, event_id=POS_EVENT_DICT, chunk_duration=1.0,
@@ -147,7 +163,7 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
         print("No Chunk found!")
         return 0
     ########################################   CHECK CRITERIA FOR SS   #################################################
-    print(str(i) + "---" + str(datetime.now().time().strftime("%H:%M:%S")) + ' --- Processing %d' % i)
+    print(str(datetime.now().time().strftime("%H:%M:%S")) + ' --- Processing %s' % os.path.basename(path[0]))
 
     try:
         apnea_events, event_ids = mne.events_from_annotations(raw, event_id=APNEA_EVENT_DICT, chunk_duration=1.0,
@@ -206,26 +222,23 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
 
         labels_wake.append(len(wake_events_set.intersection(epoch_set)) == 0)
     ####################################################################################################################
-    print(study + "    HAMED    " + str(len(labels_wake) - sum(labels_wake)))
+    # print(study + "    HAMED    " + str(len(labels_wake) - sum(labels_wake)))
     data = data[labels_wake, :, :]
     labels_apnea = list(compress(labels_apnea, labels_wake))
     labels_hypopnea = list(compress(labels_hypopnea, labels_wake))
 
     np.savez_compressed(
-        out_dir + '\\' + study + "_" + str(total_apnea_event_second) + "_" + str(total_hypopnea_event_second),
+        out_dir + '\\' + os.path.basename(path[0]) + "_" + str(total_apnea_event_second) + "_" + str(
+            total_hypopnea_event_second),
         data=data, labels_apnea=labels_apnea, labels_hypopnea=labels_hypopnea)
 
     return data.shape[0]
 
 
 if __name__ == "__main__":
-    ahi = pd.read_csv(r"C:\Data\AHI.csv")
-    ahi_dict = dict(zip(ahi.Study, ahi.AHI))
-    ss.__init__()
+    root = "D:\\ccshs\\polysomnography\\edfs\\"
+    # root = "E:\\chat\\polysomnography\\edfs\\baseline\\"
+    for edf_file in glob.glob(root + "*.edf"):
+        annot_file = edf_file.replace(".edf", "-nsrr.tsv")
 
-    if NUM_WORKER < 2:
-        for idx in range(SN):
-            preprocess(idx, identity, OUT_FOLDER, ahi_dict)
-    else:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_WORKER) as executor:
-            executor.map(preprocess, range(SN), [identity] * SN, [OUT_FOLDER] * SN, [ahi_dict] * SN)
+        preprocess((edf_file, annot_file), identity, OUT_FOLDER)

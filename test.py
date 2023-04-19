@@ -29,7 +29,7 @@ def test(config):
         x_test = x[fold]
         y_test = y[fold]  # For MultiClass keras.utils.to_categorical(y[fold], num_classes=2)
 
-        model = tf.keras.models.load_model(config["model_path"] + str(fold),compile=False)
+        model = tf.keras.models.load_model(config["model_path"] + str(fold), compile=False)
 
         predict = model.predict(x_test)
         y_score = predict

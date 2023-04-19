@@ -1,9 +1,9 @@
-from test import test
-from train import train
-import tensorflow as tf
+import os
 
-gpus = tf.config.experimental.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(gpus[0], True)
+from test import test
+from train import train, train_by_fold
+
+os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
 
 # "EOG LOC-M2 0
 # "EOG ROC-M1 1
@@ -64,7 +64,7 @@ sig_dict = {"EOG": [0, 1],
             "SPO2CO2": [9, 10],
             "ECG": [11, 12],
             "DEMO": [13],
-            "ALL": [7, 9, 10]}
+            "ALL": [7, 9, 10, 11, 12]}
 # sig_dict = {
 #     "EOG": [0, 1],
 #     "EEG": [2,3,4,5],#,6,7,8],
@@ -89,20 +89,19 @@ for ch in channel_list:
         chstr += name
         chs = chs + sig_dict[name]
     config = {
-        "data_path": "C:\\Data\\finalEEG.npz",
+        "data_path": "C:\\Data\\raw_all_RR_demo.npz",
         "model_path": "./weights/Trans_reg_imbal/f",
-        "model_name": "100" ,
+        "model_name": "hybrid" ,
         "regression": False,
 
         "transformer_layers": 5,  # best 5
         "drop_out_rate": 0.25,  # best 0.25
-        "num_patches": 20,  # best 30 TBD
+        "num_patches": 30,  # best 30 TBD
         "transformer_units": 32,  # best 32
         "regularization_weight": 0.001,  # best 0.001
         "num_heads": 4,
-        "epochs": 200,  # best 200
+        "epochs": 20,  # best 200
         "channels": chs,
     }
     train(config)
     test(config)
-    tf.keras.backend.clear_session()
