@@ -1,10 +1,5 @@
-import os
-
 from test import test
 from train import train
-
-os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
-
 
 # 0- E1 - M2
 # 1- E2 - M1
@@ -39,48 +34,7 @@ sig_dict_chat = {
 }
 
 channel_list_chat = [
-    # ["EOG"],
-    # ["EEG"],
-    # ["ECG"],
-    # ["Resp"],
-    # ["SPO2"],
-    # ["CO2"],
-    # ["EOG", "EEG"],
-    # ["EOG", "ECG"],
-    # ["EOG", "Resp"],
-    # ["EOG", "SPO2"],
-    # ["EOG", "CO2"],
-    # ["EEG", "ECG"],
-    # ["EEG", "Resp"],
-    # ["EEG", "SPO2"],
-    # ["EEG", "CO2"],
-    # ["ECG", "Resp"],
-    # ["ECG", "SPO2"],
-    # ["ECG", "CO2"],
-    # ["Resp", "SPO2"],
-    # ["Resp", "CO2"],
-    # ["SPO2", "CO2"],
-    ["EOG", "EEG", "ECG"],
-    ["EOG", "EEG", "Resp"],
-    ["EOG", "EEG", "SPO2"],
-    ["EOG", "EEG", "CO2"],
-    ["EOG", "ECG", "Resp"],
-    ["EOG", "ECG", "SPO2"],
-    ["EOG", "ECG", "CO2"],
-    ["EOG", "Resp", "SPO2"],
-    ["EOG", "Resp", "CO2"],
-    ["EOG", "SPO2", "CO2"],
-    ["EEG", "ECG", "Resp"],
-    ["EEG", "ECG", "SPO2"],
-    ["EEG", "ECG", "CO2"],
-    ["EEG", "Resp", "SPO2"],
-    ["EEG", "Resp", "CO2"],
-    ["EEG", "SPO2", "CO2"],
-    ["ECG", "Resp", "SPO2"],
-    ["ECG", "Resp", "CO2"],
-    ["ECG", "SPO2", "CO2"],
-    ["Resp", "SPO2", "CO2"],
-    # ["EOG", "EEG", "ECG", "Resp", "SPO2", "CO2"],
+    ["EOG", "EEG", "ECG", "Resp", "SPO2", "CO2"],
 
 ]
 

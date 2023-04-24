@@ -8,9 +8,6 @@ from keras.layers import Dense, Dropout, Reshape, LayerNormalization, MultiHeadA
 from keras.regularizers import L2
 
 
-gpus = tf.config.experimental.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(gpus[0], True)
-tf.keras.backend.clear_session()
 
 class Patches(Layer):
     def __init__(self, patch_size):

@@ -7,7 +7,6 @@ from keras.models import Sequential
 from keras.activations import relu, sigmoid
 from keras.regularizers import l2
 import tensorflow_addons as tfa
-
 from .transformer import create_transformer_model, mlp, create_hybrid_transformer_model
 
 

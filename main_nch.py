@@ -1,10 +1,7 @@
 import gc
-import os
 
 from test import test
 from train import train
-
-os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
 
 # "EOG LOC-M2",  # 0
 # "EOG ROC-M1",  # 1
@@ -42,7 +39,7 @@ sig_dict = {"EOG": [0, 1],
 
 channel_list = [
 
-    ["EOG", "EEG", "ECG", "RESP"],# "SPO2", "CO2"],
+    ["EOG", "EEG", "ECG", "RESP", "SPO2","CO2"],
     ["EOG", "EEG", "ECG", "RESP", "SPO2", "CO2", "DEMO"],
 
 

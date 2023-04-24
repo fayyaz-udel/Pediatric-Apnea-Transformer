@@ -1,5 +1,3 @@
-import gc
-
 import numpy as np
 from sklearn.utils import shuffle
 import tensorflow as tf

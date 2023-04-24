@@ -1,13 +1,9 @@
 import keras
 import keras.metrics
 import numpy as np
-import tensorflow as tf
-import tensorflow.python.keras.backend
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras.losses import BinaryCrossentropy
 from sklearn.utils import shuffle
-from tensorflow.core.protobuf.config_pb2 import ConfigProto
-from tensorflow.python.client.session import InteractiveSession
 
 from models.models import get_model
 
@@ -51,14 +47,6 @@ def train(config):
                     y_train = np.concatenate((y_train, y[i]))
 
 
-        configg = ConfigProto()
-        configg.gpu_options.allow_growth = True
-        session = InteractiveSession(config=configg)
-        gpus = tf.config.experimental.list_physical_devices('GPU')
-        tf.config.experimental.set_memory_growth(gpus[0], True)
-
-
-
         model = get_model(config)
         if config["regression"]:
             model.compile(optimizer="adam", loss=BinaryCrossentropy())
@@ -68,10 +56,8 @@ def train(config):
             model.compile(optimizer="adam", loss=BinaryCrossentropy(),
                           metrics=[keras.metrics.Precision(), keras.metrics.Recall()])
             early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-        print('1')
         lr_scheduler = LearningRateScheduler(lr_schedule)
-        model.fit(x=x_train, y=y_train, batch_size=16, epochs=config["epochs"])#, validation_split=0.1,callbacks=[early_stopper, lr_scheduler])
+        model.fit(x=x_train, y=y_train, batch_size=512, epochs=config["epochs"], validation_split=0.1,callbacks=[early_stopper, lr_scheduler])
         ################################################################################################################
         model.save(config["model_path"] + str(fold))
         keras.backend.clear_session()
-        session.close()
