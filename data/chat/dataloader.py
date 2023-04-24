@@ -8,42 +8,39 @@ from biosppy.signals.ecg import hamilton_segmenter, correct_rpeaks
 from biosppy.signals import tools as st
 from scipy.interpolate import splev, splrep
 
-# "EOG LOC-M2",  # 0
-# "EOG ROC-M1",  # 1
+# 0- E1 - M2
+# 1- E2 - M1
 
-# "EEG F3-M2",  # 2
-# "EEG F4-M1",  # 3
-# "EEG C3-M2",  # 4
-# "EEG C4-M1",  # 5
-# "EEG O1-M2",  # 6
-# "EEG O2-M1",  # 7
-# "EEG CZ-O1",  # 8
+# 2- F3 - M2
+# 3- F4 - M1
+# 4- C3 - M2
+# 5- C4 - M1
+# 6- O1 - M2
+# 7- O2 - M1
 
-# "ECG EKG2-EKG",  # 9
+# 8- ECG3 - ECG1
 
-# "RESP PTAF",  # 10
-# "RESP AIRFLOW",  # 11
-# "RESP THORACIC",  # 12
-# "RESP ABDOMINAL",  # 13
+# 9- CANULAFLOW
+# 10- AIRFLOW
+# 11- CHEST
+# 12- ABD
 
-# "SPO2",  # 14
-# "RATE",  # 15
-# "CAPNO",  # 16
-# "RESP RATE",  # 17
+# 13- SAO2
+# 14- CAP
+######### ADDED IN THIS STEP #########
+# 15- RRI
+# 16 Ramp
 
-# RRI
-# Ramp
-# Demo
-# "EOG"
-from data.tfrec import write_signals_to_tfr_short
-
-SIGS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]# , 12, 13, 14, 15, 16]
+SIGS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,12,13,14]
 s_count = len(SIGS)
 
 THRESHOLD = 3
-PATH = "E:\data_chat_baseline_128"
-FREQ = 128
-TARGET_FREQ = 32
+PATH = "E:\chat256"
+FREQ = 256
+TARGET_FREQ = 64
+EPOCH_LENGTH = 30
+ECG_SIG = 8
+OUT_PATH = "C:\\Data\\chat_3_64"
 
 
 def extract_rri(signal, ir, CHUNK_DURATION):
@@ -62,7 +59,7 @@ def extract_rri(signal, ir, CHUNK_DURATION):
 
         return np.clip(rri_interp_signal, 0, 2) * 100, np.clip(amp_interp_signal, -0.001, 0.002) * 10000, True
     else:
-        return np.zeros((TARGET_FREQ * 60)), np.zeros((TARGET_FREQ * 60)), False
+        return np.zeros((TARGET_FREQ * EPOCH_LENGTH)), np.zeros((TARGET_FREQ * EPOCH_LENGTH)), False
 
 
 def load_data(path):
@@ -113,10 +110,10 @@ def load_data(path):
             labels_apnea = labels_apnea[samples]
             labels_hypopnea = labels_hypopnea[samples]
 
-            data = np.zeros((signals.shape[0], 60 * TARGET_FREQ, s_count + 2))  # s_count + 2
+            data = np.zeros((signals.shape[0], EPOCH_LENGTH * TARGET_FREQ, s_count + 2))
             for i in range(signals.shape[0]):  # for each epoch
                 # data[i, :len(demo_arr), -3] = demo_arr
-                data[i, :, -1], data[i, :, -2], status = extract_rri(signals[i, 7, :], TARGET_FREQ, 60.0)
+                data[i, :, -1], data[i, :, -2], status = extract_rri(signals[i, ECG_SIG, :], TARGET_FREQ, float(EPOCH_LENGTH))
 
                 if status:
                     rri_succ_counter += 1
@@ -124,7 +121,7 @@ def load_data(path):
                     rri_fail_counter += 1
 
                 for j in range(s_count):  # for each signal
-                    data[i, :, j] = resample(signals[i, SIGS[j], :], 60 * TARGET_FREQ)
+                    data[i, :, j] = resample(signals[i, SIGS[j], :], EPOCH_LENGTH * TARGET_FREQ)
 
             if first:
                 aggregated_data = data
@@ -146,4 +143,4 @@ def load_data(path):
 
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
-    np.savez_compressed("C:\\Data\\ccshs", x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
+    np.savez_compressed(OUT_PATH, x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)

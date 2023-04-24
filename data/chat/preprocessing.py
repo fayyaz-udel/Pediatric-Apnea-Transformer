@@ -122,24 +122,6 @@ def load_study_chat(edf_path, annotation_path, annotation_func, preload=False, e
 
 
 ################################################# Extractor functions ##################################################
-def extract_rri(signal, ir):
-    tm = np.arange(0, CHUNK_DURATION, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION
-
-    filtered, _, _ = st.filter_signal(signal=signal, ftype="FIR", band="bandpass", order=int(0.3 * FREQ),
-                                      frequency=[3, 45], sampling_rate=FREQ, )
-    (rpeaks,) = hamilton_segmenter(signal=filtered, sampling_rate=FREQ)
-    (rpeaks,) = correct_rpeaks(signal=filtered, rpeaks=rpeaks, sampling_rate=FREQ, tol=0.05)
-
-    if 40 < len(rpeaks) < 150 and np.max(signal) < 0.0015 and np.min(signal) > -0.0015:
-        rri_tm, rri_signal = rpeaks[1:] / float(FREQ), np.diff(rpeaks) / float(FREQ)
-        ampl_tm, ampl_signal = rpeaks / float(FREQ), signal[rpeaks]
-        rri_interp_signal = splev(tm, splrep(rri_tm, rri_signal, k=3), ext=1)
-        amp_interp_signal = splev(tm, splrep(ampl_tm, ampl_signal, k=3), ext=1)
-
-        return np.clip(rri_interp_signal, 0, 10), np.clip(amp_interp_signal, 0, 10)
-    else:
-        return np.zeros((32 * 60)), np.zeros((32 * 60))
-
 
 def preprocess(path, annotation_modifier, out_dir):
     is_apnea_available, is_hypopnea_available = True, True

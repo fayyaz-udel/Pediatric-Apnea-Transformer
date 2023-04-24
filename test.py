@@ -1,3 +1,5 @@
+import gc
+
 import numpy as np
 from sklearn.utils import shuffle
 import tensorflow as tf
@@ -39,3 +41,5 @@ def test(config):
 
     result.print()
     result.save("./results/" + config["model_name"] + ".txt", config)
+
+    del data, x_test, y_test, model, predict, y_score, y_predict
