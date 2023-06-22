@@ -34,7 +34,7 @@ sig_dict_chat = {
 }
 
 channel_list_chat = [
-    ["EOG", "EEG", "ECG", "Resp", "SPO2", "CO2"],
+    ["EOG", "EEG"],
 
 ]
 
@@ -46,7 +46,7 @@ for ch in channel_list_chat:
         chs = chs + sig_dict_chat[name]
     print(chstr, chs)
     config = {
-        "data_path": "C:\\Data\\chat_3_64.npz",
+        "data_path": "D:\\Data\\chat_3_64.npz",
         "model_path": "./weights/chat100/f",
         "model_name": "Transformer_chat2_"+ chstr,
         "regression": False,
@@ -57,7 +57,7 @@ for ch in channel_list_chat:
         "transformer_units": 32,  # best 32
         "regularization_weight": 0.001,  # best 0.001
         "num_heads": 4,
-        "epochs": 100,  # best 200
+        "epochs": 10,  # best 200
         "channels": chs,
     }
     train(config)
