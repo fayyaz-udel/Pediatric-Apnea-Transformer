@@ -31,16 +31,15 @@ from scipy.interpolate import splev, splrep
 # 15- RRI
 # 16 Ramp
 
-SIGS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,12,13,14]
+SIGS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 s_count = len(SIGS)
 
 THRESHOLD = 3
-PATH = "E:\chat256"
-FREQ = 256
-TARGET_FREQ = 64
+PATH = "E:\\data_chat_baseline_30x128_test"
+FREQ = 128
 EPOCH_LENGTH = 30
 ECG_SIG = 8
-OUT_PATH = "C:\\Data\\chat_3_64"
+OUT_PATH = "E:\\data_chat_baseline_30x128_test"
 
 
 def extract_rri(signal, ir, CHUNK_DURATION):
@@ -59,7 +58,7 @@ def extract_rri(signal, ir, CHUNK_DURATION):
 
         return np.clip(rri_interp_signal, 0, 2) * 100, np.clip(amp_interp_signal, -0.001, 0.002) * 10000, True
     else:
-        return np.zeros((TARGET_FREQ * EPOCH_LENGTH)), np.zeros((TARGET_FREQ * EPOCH_LENGTH)), False
+        return np.zeros((FREQ * EPOCH_LENGTH)), np.zeros((FREQ * EPOCH_LENGTH)), False
 
 
 def load_data(path):
@@ -110,10 +109,11 @@ def load_data(path):
             labels_apnea = labels_apnea[samples]
             labels_hypopnea = labels_hypopnea[samples]
 
-            data = np.zeros((signals.shape[0], EPOCH_LENGTH * TARGET_FREQ, s_count + 2))
+            data = np.zeros((signals.shape[0], EPOCH_LENGTH * FREQ, s_count + 2))
             for i in range(signals.shape[0]):  # for each epoch
                 # data[i, :len(demo_arr), -3] = demo_arr
-                data[i, :, -1], data[i, :, -2], status = extract_rri(signals[i, ECG_SIG, :], TARGET_FREQ, float(EPOCH_LENGTH))
+                data[i, :, -1], data[i, :, -2], status = extract_rri(signals[i, ECG_SIG, :], FREQ,
+                                                                     float(EPOCH_LENGTH))
 
                 if status:
                     rri_succ_counter += 1
@@ -121,7 +121,7 @@ def load_data(path):
                     rri_fail_counter += 1
 
                 for j in range(s_count):  # for each signal
-                    data[i, :, j] = resample(signals[i, SIGS[j], :], EPOCH_LENGTH * TARGET_FREQ)
+                    data[i, :, j] = signals[i, SIGS[j], :]
 
             if first:
                 aggregated_data = data
@@ -143,4 +143,4 @@ def load_data(path):
 
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
-    np.savez_compressed(OUT_PATH, x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
+    np.savez_compressed(OUT_PATH, x=x[0], y_apnea=y_apnea[0], y_hypopnea=y_hypopnea[0])

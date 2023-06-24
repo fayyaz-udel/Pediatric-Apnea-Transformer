@@ -42,7 +42,6 @@ s_count = len(SIGS)
 THRESHOLD = 3
 PATH = "E:\\nch256\\"
 FREQ = 256
-TARGET_FREQ = 64
 EPOCH_DURATION = 30
 ECG_SIG = 8
 OUT_PATH = "C:\\Data\\nch2"
@@ -63,7 +62,7 @@ def extract_rri(signal, ir, CHUNK_DURATION):
 
         return np.clip(rri_interp_signal, 0, 2), np.clip(amp_interp_signal, -0.001, 0.002)
     else:
-        return np.zeros((TARGET_FREQ * EPOCH_DURATION)), np.zeros((TARGET_FREQ * EPOCH_DURATION))
+        return np.zeros((FREQ * EPOCH_DURATION)), np.zeros((FREQ * EPOCH_DURATION))
 
 
 def load_data(path):
@@ -132,12 +131,12 @@ def load_data(path):
                 labels_apnea = labels_apnea[samples]
                 labels_hypopnea = labels_hypopnea[samples]
 
-                data = np.zeros((signals.shape[0], EPOCH_DURATION * TARGET_FREQ, s_count + 3))
+                data = np.zeros((signals.shape[0], EPOCH_DURATION * FREQ, s_count + 3))
                 for i in range(signals.shape[0]):  # for each epoch
                     data[i, :len(demo_arr), -1] = demo_arr
-                    data[i, :, -2], data[i, :, -3] = extract_rri(signals[i, ECG_SIG, :], TARGET_FREQ, float(EPOCH_DURATION))
+                    data[i, :, -2], data[i, :, -3] = extract_rri(signals[i, ECG_SIG, :], FREQ, float(EPOCH_DURATION))
                     for j in range(s_count):  # for each signal
-                        data[i, :, j] = resample(signals[i, SIGS[j], :], EPOCH_DURATION * TARGET_FREQ)
+                        data[i, :, j] = resample(signals[i, SIGS[j], :], EPOCH_DURATION * FREQ)
 
                 if first:
                     aggregated_data = data

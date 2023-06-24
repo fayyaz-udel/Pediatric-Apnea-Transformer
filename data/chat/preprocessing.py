@@ -6,38 +6,35 @@ from itertools import compress
 import mne
 import numpy as np
 import pandas as pd
-from biosppy.signals import tools as st
-from biosppy.signals.ecg import hamilton_segmenter, correct_rpeaks
 from mne import make_fixed_length_events
-from scipy.interpolate import splev, splrep
-
-import sleep_study as ss
 
 THRESHOLD = 3
 NUM_WORKER = 1
 SN = 3984  # STUDY NUMBER
 FREQ = 128.0
-CHUNK_DURATION = 30.0
-OUT_FOLDER = 'E:\\data_chat_baseline_128'
+EPOCH_LENGTH = 30.0
+OUT_FOLDER = 'E:\\data_chat_baseline_30x128_test'
 
 channels = [
-    'E1', # 0
-    'E2', # 1
-    'F3', # 2
-    'F4', # 3
-    'C3', # 4
-    'C4', # 5
-    'M1', # 6
-    'M2', # 7
-    'O1', # 8
-    'O2', # 9
-    'ECG3', # 10
-    'ECG1', # 11
-    'AIRFLOW', # 12
-    'ABD', # 13
-    'CHEST', # 14
-    'SAO2', # 15
-    'CAP',# 16
+    'E1',  # 0
+    'E2',  # 1
+    'F3',  # 2
+    'F4',  # 3
+    'C3',  # 4
+    'C4',  # 5
+    'M1',  # 6
+    'M2',  # 7
+    'O1',  # 8
+    'O2',  # 9
+    'ECG3',  # 10
+    'ECG1',  # 11
+
+    'CANNULAFLOW',  # 12
+    'AIRFLOW',  # 13
+    'CHEST',  # 14
+    'ABD',  # 15
+    'SAO2',  # 16
+    'CAP',  # 17
 ]
 
 APNEA_EVENT_DICT = {
@@ -85,7 +82,7 @@ def wake2bad(df):
     return df.replace("Sleep stage W", 'badevent')
 
 
-def change_duration(df, label_dict=POS_EVENT_DICT, duration=CHUNK_DURATION):
+def change_duration(df, label_dict=POS_EVENT_DICT, duration=EPOCH_LENGTH):
     for key in label_dict:
         df.loc[df.description == key, 'duration'] = duration
     print("change duration!")
@@ -94,22 +91,6 @@ def change_duration(df, label_dict=POS_EVENT_DICT, duration=CHUNK_DURATION):
 
 def load_study_chat(edf_path, annotation_path, annotation_func, preload=False, exclude=[], verbose='CRITICAL'):
     raw = mne.io.edf.edf.RawEDF(input_fname=edf_path, exclude=exclude, preload=preload, verbose=verbose)
-
-    # patient_id, study_id = name.split('_')
-
-    # tmp = ss.info.SLEEP_STUDY
-    # date = tmp[(tmp.STUDY_PAT_ID == int(patient_id))
-    #          & (tmp.SLEEP_STUDY_ID == int(study_id))] \
-    #                  .SLEEP_STUDY_START_DATETIME.values[0] \
-    #                  .split()[0]
-
-    # time = str(raw.info['meas_date']).split()[1][:-6]
-    #
-    # new_datetime = parser.parse(date + ' ' + time + ' UTC') \
-    #                      .replace(tzinfo=timezone.utc)
-    #
-    # raw.set_meas_date(new_datetime)
-    # raw._raw_extras[0]['meas_date'] = new_datetime
 
     df = annotation_func(pd.read_csv(annotation_path, sep='\t'))
     annotations = mne.Annotations(df.onset, df.duration, df.description)  # ,orig_time=new_datetime)
@@ -121,8 +102,6 @@ def load_study_chat(edf_path, annotation_path, annotation_func, preload=False, e
     return raw
 
 
-################################################# Extractor functions ##################################################
-
 def preprocess(path, annotation_modifier, out_dir):
     is_apnea_available, is_hypopnea_available = True, True
     raw = load_study_chat(path[0], path[1], annotation_modifier, verbose=True)
@@ -131,10 +110,6 @@ def preprocess(path, annotation_modifier, out_dir):
         print([name in raw.ch_names for name in channels])
         print("study " + os.path.basename(path[0]) + " skipped since insufficient channels")
         return 0
-
-    # if ahi_dict.get(study, 0) < THRESHOLD:
-    #     print("study " + str(study) + " skipped since low AHI ---  AHI = " + str(ahi_dict.get(study, 0)))
-    #     return 0
 
     try:
         apnea_events, event_ids = mne.events_from_annotations(raw, event_id=POS_EVENT_DICT, chunk_duration=1.0,
@@ -160,14 +135,14 @@ def preprocess(path, annotation_modifier, out_dir):
     wake_events, event_ids = mne.events_from_annotations(raw, event_id=WAKE_DICT, chunk_duration=1.0, verbose=None)
     ####################################################################################################################
     sfreq = raw.info['sfreq']
-    tmax = CHUNK_DURATION - 1. / sfreq
+    tmax = EPOCH_LENGTH - 1. / sfreq
 
-    fixed_events = make_fixed_length_events(raw, id=0, duration=CHUNK_DURATION, overlap=0.)
-    epochs = mne.Epochs(raw, fixed_events, event_id=[0], tmin=0, tmax=tmax, baseline=None, preload=True, proj=False,
-                        picks=channels, verbose=None)
+    raw = raw.pick_channels(channels, ordered=True)
+    fixed_events = make_fixed_length_events(raw, id=0, duration=EPOCH_LENGTH, overlap=0.)
+    epochs = mne.Epochs(raw, fixed_events, event_id=[0], tmin=0, tmax=tmax, baseline=None, preload=True, proj=False, verbose=None)
     epochs.load_data()
     if sfreq != FREQ:
-        epochs = epochs.resample(FREQ, npad='auto', n_jobs=4, verbose=None)
+        epochs = epochs.resample(FREQ, npad='auto', n_jobs=8, verbose=None)
     data = epochs.get_data()
     ####################################################################################################################
     if is_apnea_available:
@@ -180,12 +155,12 @@ def preprocess(path, annotation_modifier, out_dir):
 
     labels_apnea = []
     labels_hypopnea = []
-    labels_wake = []
+    labels_not_awake = []
     total_apnea_event_second = 0
     total_hypopnea_event_second = 0
 
     for seq in range(data.shape[0]):
-        epoch_set = set(range(starts[seq], starts[seq] + int(CHUNK_DURATION)))
+        epoch_set = set(range(starts[seq], starts[seq] + int(EPOCH_LENGTH)))
         if is_apnea_available:
             apnea_seconds = len(apnea_events_set.intersection(epoch_set))
             total_apnea_event_second += apnea_seconds
@@ -200,12 +175,37 @@ def preprocess(path, annotation_modifier, out_dir):
         else:
             labels_hypopnea.append(0)
 
-        labels_wake.append(len(wake_events_set.intersection(epoch_set)) == 0)
+        labels_not_awake.append(len(wake_events_set.intersection(epoch_set)) == 0)
     ####################################################################################################################
-    # print(study + "    HAMED    " + str(len(labels_wake) - sum(labels_wake)))
-    data = data[labels_wake, :, :]
-    labels_apnea = list(compress(labels_apnea, labels_wake))
-    labels_hypopnea = list(compress(labels_hypopnea, labels_wake))
+    data = data[labels_not_awake, :, :]
+    labels_apnea = list(compress(labels_apnea, labels_not_awake))
+    labels_hypopnea = list(compress(labels_hypopnea, labels_not_awake))
+    ####################################################################################################################
+
+    new_data = np.zeros_like(data)
+    for i in range(data.shape[0]):
+
+        new_data[i, 0, :] = data[i, 0, :] - data[i, 7, :]  # E1 - M2
+        new_data[i, 1, :] = data[i, 1, :] - data[i, 6, :]  # E2 - M1
+
+        new_data[i, 2, :] = data[i, 2, :] - data[i, 7, :]  # F3 - M2
+        new_data[i, 3, :] = data[i, 3, :] - data[i, 6, :]  # F4 - M1
+        new_data[i, 4, :] = data[i, 4, :] - data[i, 7, :]  # C3 - M2
+        new_data[i, 5, :] = data[i, 5, :] - data[i, 6, :]  # C4 - M1
+        new_data[i, 6, :] = data[i, 8, :] - data[i, 7, :]  # O1 - M2
+        new_data[i, 7, :] = data[i, 9, :] - data[i, 6, :]  # O2 - M1
+
+        new_data[i, 8, :] = data[i, 10,:] - data[i, 11,:]  # ECG3 - ECG1
+
+        new_data[i, 9, :] = data[i, 12, :]  # CANULAFLOW
+        new_data[i, 10, :] = data[i, 13, :]  # AIRFLOW
+        new_data[i, 11, :] = data[i, 14, :]  # CHEST
+        new_data[i, 12, :] = data[i, 15, :]  # ABD
+        new_data[i, 13, :] = data[i, 16, :]  # SAO2
+        new_data[i, 14, :] = data[i, 17, :]  # CAP
+
+    data = new_data[:, :15, :]
+    ####################################################################################################################
 
     np.savez_compressed(
         out_dir + '\\' + os.path.basename(path[0]) + "_" + str(total_apnea_event_second) + "_" + str(
@@ -216,7 +216,7 @@ def preprocess(path, annotation_modifier, out_dir):
 
 
 if __name__ == "__main__":
-    root = "E:\\chat\\polysomnography\\edfs\\baseline\\"
+    root = "E:\\chat\\polysomnography\\edfs\\baseline_test\\"
     for edf_file in glob.glob(root + "*.edf"):
         annot_file = edf_file.replace(".edf", "-nsrr.tsv")
 
