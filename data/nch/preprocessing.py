@@ -166,6 +166,7 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
     sfreq = raw.info['sfreq']
     tmax = CHUNK_DURATION - 1. / sfreq
 
+    raw = raw.pick_channels(channels, ordered=True)
     fixed_events = make_fixed_length_events(raw, id=0, duration=CHUNK_DURATION, overlap=0.)
     epochs = mne.Epochs(raw, fixed_events, event_id=[0], tmin=0, tmax=tmax, baseline=None, preload=True, proj=False,
                         picks=channels, verbose=None)

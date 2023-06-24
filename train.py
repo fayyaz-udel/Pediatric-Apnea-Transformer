@@ -21,7 +21,7 @@ def train(config):
     data = np.load(config["data_path"], allow_pickle=True)
     x, y_apnea, y_hypopnea = data['x'], data['y_apnea'], data['y_hypopnea']
     y = y_apnea + y_hypopnea
-    ########################################################################################
+     ########################################################################################
     for i in range(FOLD):
         x[i], y[i] = shuffle(x[i], y[i])
         x[i] = np.nan_to_num(x[i], nan=-1)
