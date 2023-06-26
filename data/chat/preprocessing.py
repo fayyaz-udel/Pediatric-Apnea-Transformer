@@ -26,8 +26,8 @@ channels = [
     'M2',  # 7
     'O1',  # 8
     'O2',  # 9
-    'ECG3',  # 10
-    'ECG1',  # 11
+    'ECG1',  # 10
+    'ECG3',  # 11
 
     'CANNULAFLOW',  # 12
     'AIRFLOW',  # 13
@@ -195,7 +195,7 @@ def preprocess(path, annotation_modifier, out_dir):
         new_data[i, 6, :] = data[i, 8, :] - data[i, 7, :]  # O1 - M2
         new_data[i, 7, :] = data[i, 9, :] - data[i, 6, :]  # O2 - M1
 
-        new_data[i, 8, :] = data[i, 10,:] - data[i, 11,:]  # ECG3 - ECG1
+        new_data[i, 8, :] = data[i, 10,:] - data[i, 11,:]  # ECG
 
         new_data[i, 9, :] = data[i, 12, :]  # CANULAFLOW
         new_data[i, 10, :] = data[i, 13, :]  # AIRFLOW
@@ -203,7 +203,6 @@ def preprocess(path, annotation_modifier, out_dir):
         new_data[i, 12, :] = data[i, 15, :]  # ABD
         new_data[i, 13, :] = data[i, 16, :]  # SAO2
         new_data[i, 14, :] = data[i, 17, :]  # CAP
-
     data = new_data[:, :15, :]
     ####################################################################################################################
 

@@ -14,28 +14,45 @@ import sleep_study as ss
 THRESHOLD = 3
 NUM_WORKER = 8
 SN = 3984  # STUDY NUMBER
-FREQ = 32.0
+FREQ = 100.0
 CHUNK_DURATION = 30.0
-OUT_FOLDER = 'D:\\data32'
+OUT_FOLDER = 'D:\\nch_30x100'
+
+# channels = [
+#     "EOG LOC-M2",  # 0
+#     "EOG ROC-M1",  # 1
+#     "EEG F3-M2",  # 2
+#     "EEG F4-M1",  # 3
+#     "EEG C3-M2",  # 4
+#     "EEG C4-M1",  # 5
+#     "EEG O1-M2",  # 6
+#     "EEG O2-M1",  # 7
+#     "EEG CZ-O1",  # 8
+#     "ECG EKG2-EKG",  # 9
+#     "RESP PTAF",  # 10
+#     "RESP AIRFLOW",  # 11
+#     "RESP THORACIC",  # 12
+#     "RESP ABDOMINAL",  # 13
+#     "SPO2",  # 14
+#     "RATE",  # 15
+#     "CAPNO",  # 16
+#     "RESP RATE",  # 17
+# ]
+
+
 channels = [
     "EOG LOC-M2",  # 0
     "EOG ROC-M1",  # 1
-    "EEG F3-M2",  # 2
-    "EEG F4-M1",  # 3
-    "EEG C3-M2",  # 4
-    "EEG C4-M1",  # 5
-    "EEG O1-M2",  # 6
-    "EEG O2-M1",  # 7
-    "EEG CZ-O1",  # 8
-    "ECG EKG2-EKG",  # 9
-    "RESP PTAF",  # 10
-    "RESP AIRFLOW",  # 11
-    "RESP THORACIC",  # 12
-    "RESP ABDOMINAL",  # 13
-    "SPO2",  # 14
-    "RATE",  # 15
-    "CAPNO",  # 16
-    "RESP RATE",  # 17
+    "EEG C3-M2",  # 2
+    "EEG C4-M1",  # 3
+    "ECG EKG2-EKG",  # 4
+
+    "RESP PTAF",  # 5
+    "RESP AIRFLOW",  # 6
+    "RESP THORACIC",  # 7
+    "RESP ABDOMINAL",  # 8
+    "SPO2",  # 9
+    "CAPNO",  # 10
 ]
 
 APNEA_EVENT_DICT = {
@@ -107,26 +124,6 @@ def change_duration(df, label_dict=POS_EVENT_DICT, duration=CHUNK_DURATION):
     print("change duration!")
     return df
 
-
-def extract_rri(signal, ir):
-    tm = np.arange(0, CHUNK_DURATION, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION
-
-    filtered, _, _ = st.filter_signal(signal=signal, ftype="FIR", band="bandpass", order=int(0.3 * FREQ),
-                                      frequency=[3, 45], sampling_rate=FREQ, )
-    (rpeaks,) = hamilton_segmenter(signal=filtered, sampling_rate=FREQ)
-    (rpeaks,) = correct_rpeaks(signal=filtered, rpeaks=rpeaks, sampling_rate=FREQ, tol=0.05)
-
-    if 40 < len(rpeaks) < 150 and np.max(signal) < 0.0015 and np.min(signal) > -0.0015:
-        rri_tm, rri_signal = rpeaks[1:] / float(FREQ), np.diff(rpeaks) / float(FREQ)
-        ampl_tm, ampl_signal = rpeaks / float(FREQ), signal[rpeaks]
-        rri_interp_signal = splev(tm, splrep(rri_tm, rri_signal, k=3), ext=1)
-        amp_interp_signal = splev(tm, splrep(ampl_tm, ampl_signal, k=3), ext=1)
-
-        return np.clip(rri_interp_signal, 0, 10), np.clip(amp_interp_signal, 0, 10)
-    else:
-        return np.zeros((32 * 60)), np.zeros((32 * 60))
-
-
 def preprocess(i, annotation_modifier, out_dir, ahi_dict):
     is_apnea_available, is_hypopnea_available = True, True
     study = ss.data.study_list[i]
@@ -168,8 +165,7 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
 
     raw = raw.pick_channels(channels, ordered=True)
     fixed_events = make_fixed_length_events(raw, id=0, duration=CHUNK_DURATION, overlap=0.)
-    epochs = mne.Epochs(raw, fixed_events, event_id=[0], tmin=0, tmax=tmax, baseline=None, preload=True, proj=False,
-                        picks=channels, verbose=None)
+    epochs = mne.Epochs(raw, fixed_events, event_id=[0], tmin=0, tmax=tmax, baseline=None, preload=True, proj=False, verbose=None)
     epochs.load_data()
     if sfreq != FREQ:
         epochs = epochs.resample(FREQ, npad='auto', n_jobs=4, verbose=None)
@@ -220,7 +216,7 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
 
 
 if __name__ == "__main__":
-    ahi = pd.read_csv(r"C:\Data\AHI.csv")
+    ahi = pd.read_csv(r"D:\Data\AHI.csv")
     ahi_dict = dict(zip(ahi.Study, ahi.AHI))
     ss.__init__()
 

@@ -143,4 +143,6 @@ def load_data(path):
 
 if __name__ == "__main__":
     x, y_apnea, y_hypopnea = load_data(PATH)
-    np.savez_compressed(OUT_PATH, x=x[0], y_apnea=y_apnea[0], y_hypopnea=y_hypopnea[0])
+    for i in range(5):
+        print(x[i].shape, y_apnea[i].shape, y_hypopnea[i].shape)
+        np.savez_compressed(OUT_PATH + "_" + str(i), x=x[i], y_apnea=y_apnea[i], y_hypopnea=y_hypopnea[i])

@@ -8,43 +8,40 @@ from biosppy.signals.ecg import hamilton_segmenter, correct_rpeaks
 from biosppy.signals import tools as st
 from scipy.interpolate import splev, splrep
 
-
 # "EOG LOC-M2",  # 0
 # "EOG ROC-M1",  # 1
-#
 # "EEG F3-M2",  # 2
 # "EEG F4-M1",  # 3
 # "EEG C3-M2",  # 4
 # "EEG C4-M1",  # 5
 # "EEG O1-M2",  # 6
 # "EEG O2-M1",  # 7
-#
-# "ECG EKG2-EKG",  # 8
-#
-# "RESP PTAF",  # 9
-# "RESP AIRFLOW",  # 10
-# "RESP THORACIC",  # 11
-# "RESP ABDOMINAL",  # 12
-# "RESP RATE",  # 13
-#
+# "EEG CZ-O1",  # 8
+# "ECG EKG2-EKG",  # 9
+# "RESP PTAF",  # 10
+# "RESP AIRFLOW",  # 11
+# "RESP THORACIC",  # 12
+# "RESP ABDOMINAL",  # 13
 # "SPO2",  # 14
-# "CAPNO",  # 15
+# "RATE",  # 15
+# "CAPNO",  # 16
+# "RESP RATE",  # 17
 
 ######### ADDED IN THIS STEP #########
-# RRI #16
-# Ramp #17
-# Demo #18
+# RRI #18
+# Ramp #19
+# Demo #20
 
 
-SIGS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+SIGS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 s_count = len(SIGS)
 
 THRESHOLD = 3
-PATH = "E:\\nch256\\"
-FREQ = 256
+PATH = "D:\\nch_30x128_test\\"
+FREQ = 128
 EPOCH_DURATION = 30
 ECG_SIG = 8
-OUT_PATH = "C:\\Data\\nch2"
+OUT_PATH = "D:\\nch_30x128_test"
 
 def extract_rri(signal, ir, CHUNK_DURATION):
     tm = np.arange(0, CHUNK_DURATION, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION
@@ -66,8 +63,8 @@ def extract_rri(signal, ir, CHUNK_DURATION):
 
 
 def load_data(path):
-    demo = pd.read_csv("../misc/result.csv")
-    ahi = pd.read_csv(r"C:\Data\AHI.csv")
+    # demo = pd.read_csv("../misc/result.csv") # TODO
+    ahi = pd.read_csv(r"D:\Data\AHI.csv")
     ahi_dict = dict(zip(ahi.Study, ahi.AHI))
     root_dir = os.path.expanduser(path)
     file_list = os.listdir(root_dir)
@@ -116,7 +113,7 @@ def load_data(path):
                 labels_hypopnea = study_data['labels_hypopnea']
 
                 identifier = study.split('\\')[-1].split('_')[0] + "_" + study.split('\\')[-1].split('_')[1]
-                demo_arr = demo[demo['id'] == identifier].drop(columns=['id']).to_numpy().squeeze()
+                # demo_arr = demo[demo['id'] == identifier].drop(columns=['id']).to_numpy().squeeze() # TODO
 
                 y_c = labels_apnea + labels_hypopnea
                 neg_samples = np.where(y_c == 0)[0]
@@ -133,7 +130,7 @@ def load_data(path):
 
                 data = np.zeros((signals.shape[0], EPOCH_DURATION * FREQ, s_count + 3))
                 for i in range(signals.shape[0]):  # for each epoch
-                    data[i, :len(demo_arr), -1] = demo_arr
+                    # data[i, :len(demo_arr), -1] = demo_arr TODO
                     data[i, :, -2], data[i, :, -3] = extract_rri(signals[i, ECG_SIG, :], FREQ, float(EPOCH_DURATION))
                     for j in range(s_count):  # for each signal
                         data[i, :, j] = resample(signals[i, SIGS[j], :], EPOCH_DURATION * FREQ)
