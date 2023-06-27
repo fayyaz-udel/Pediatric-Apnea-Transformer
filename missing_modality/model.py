@@ -1,9 +1,7 @@
 from keras import layers
-import tensorflow as tf
-from config import *
 import keras
-
-from missing_modality.Patches import *
+from config import *
+import tensorflow as tf
 
 
 def mlp(x, dropout_rate, hidden_units):
@@ -79,14 +77,14 @@ def create_decoder(
 
 class MaskedAutoencoder(keras.Model):
     def __init__(
-            self,
-            train_augmentation_model,
-            test_augmentation_model,
-            patch_layer,
-            patch_encoder,
-            encoder,
-            decoder,
-            **kwargs
+        self,
+        train_augmentation_model,
+        test_augmentation_model,
+        patch_layer,
+        patch_encoder,
+        encoder,
+        decoder,
+        **kwargs
     ):
         super().__init__(**kwargs)
         self.train_augmentation_model = train_augmentation_model
@@ -163,37 +161,3 @@ class MaskedAutoencoder(keras.Model):
         # Update the trackers.
         self.compiled_metrics.update_state(loss_patch, loss_output)
         return {m.name: m.result() for m in self.metrics}
-
-
-def create_vit_classifier():
-    inputs = layers.Input(shape=(IMAGE_SIZE, IMAGE_SIZE, 3))
-    # Create patches.
-    patches = PatchesCls()(inputs)
-    # Encode patches.
-    encoded_patches = PatchEncoderCls()(patches)
-
-    # Create multiple layers of the Transformer block.
-    for _ in range(ENC_LAYERS):
-        # Layer normalization 1.
-        x1 = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)(encoded_patches)
-        # Create a multi-head attention layer.
-        attention_output = layers.MultiHeadAttention(
-            num_heads=ENC_NUM_HEADS, key_dim=ENC_PROJECTION_DIM, dropout=0.1
-        )(x1, x1)
-        # Skip connection 1.
-        x2 = layers.Add()([attention_output, encoded_patches])
-        # Layer normalization 2.
-        x3 = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)(x2)
-        # MLP.
-        x3 = mlp(x3, hidden_units=ENC_TRANSFORMER_UNITS, dropout_rate=0.1)
-        # Skip connection 2.
-        encoded_patches = layers.Add()([x3, x2])
-
-    # Create a [batch_size, projection_dim] tensor.
-    representation = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)(encoded_patches)
-    representation = layers.GlobalAveragePooling1D()(representation)
-    # Classify outputs.
-    outputs = layers.Dense(NUM_CLASSES, activation="softmax")(representation)
-    # Create the Keras model.
-    model = keras.Model(inputs=inputs, outputs=outputs)
-    return model
