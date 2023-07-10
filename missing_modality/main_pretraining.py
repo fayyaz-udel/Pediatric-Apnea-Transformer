@@ -1,6 +1,7 @@
 from tensorflow import keras
 from keras import layers
 
+from keras import metrics
 from config import *
 from missing_modality.PatchEncoder import PatchEncoder
 from missing_modality.Patches import Patches
@@ -39,7 +40,7 @@ mae_model = MaskedAutoencoder(
 
 mae_model.compile(optimizer='adam', loss=keras.losses.MeanSquaredError(), metrics=["mae"])
 
-history = mae_model.fit(train_ds, epochs=EPOCHS)
+history = mae_model.fit(train_ds, epochs=5)
 
 loss, mae = mae_model.evaluate(train_ds)
 print(f"Loss: {loss:.2f}")
@@ -89,7 +90,7 @@ aug = get_augmentation_model()
 train_ds_2 = train_ds_2.map(lambda x, y: (aug(x), y), num_parallel_calls=AUTO)
 
 
-downstream_model.compile(optimizer='adam', loss="binary_crossentropy", metrics=["accuracy"])
+downstream_model.compile(optimizer='adam', loss="binary_crossentropy", metrics=["accuracy", metrics.AUC(), metrics.Precision(), metrics.Recall()])
 downstream_model.fit(train_ds_2, epochs=EPOCHS, verbose=1)
 downstream_model.summary()
 loss, accuracy = downstream_model.evaluate(train_ds_2)
