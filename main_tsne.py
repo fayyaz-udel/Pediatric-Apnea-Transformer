@@ -53,18 +53,19 @@ for ch in channel_list_chat:
         chs = chs + sig_dict_chat[name]
     print(chstr, chs)
     config = {
-        "data_path": "C:\\Data\\chat_3_64.npz",
-        "model_path": "./weights/chat100/f",
-        "model_name": "Transformer_chat2_"+ chstr,
+        "data_path": "D:\\Data\\chat_3_64.npz",
+        "model_path": "./weights/chat1000/f",
+        "model_name": "Transformer_chat22_"+ chstr,
         "regression": False,
 
-        "transformer_layers": 5,  # best 5
-        "drop_out_rate": 0.25,  # best 0.25
+        "transformer_layers": 3,  # best 5
+        "drop_out_rate": 0.05,  # best 0.25
         "num_patches": 30,  # best 30 TBD
-        "transformer_units": 32,  # best 32
+        "transformer_units": 16,  # best 32
         "regularization_weight": 0.001,  # best 0.001
-        "num_heads": 4,
+        "num_heads": 2,
         "epochs": 100,  # best 200
         "channels": chs,
     }
+    # train(config)
     test_tsne(config)
