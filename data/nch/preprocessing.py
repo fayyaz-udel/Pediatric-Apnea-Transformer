@@ -14,9 +14,9 @@ import sleep_study as ss
 THRESHOLD = 3
 NUM_WORKER = 8
 SN = 3984  # STUDY NUMBER
-FREQ = 100.0
+FREQ = 64.0
 CHUNK_DURATION = 30.0
-OUT_FOLDER = 'D:\\nch_30x100'
+OUT_FOLDER = 'D:\\nch_30x64'
 
 # channels = [
 #     "EOG LOC-M2",  # 0

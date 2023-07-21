@@ -60,5 +60,8 @@ for ch in channel_list_chat:
         "epochs": 100,  # best 200
         "channels": chs,
     }
-    train(config)
-    test(config)
+    # train(config)
+    for snr in [5, 10, 20, 30, 40, 50]:
+        config["test_noise_snr"] = snr
+        config["model_name"] = config["model_name"] + "_" + "noise_" + str(snr)
+        test(config)

@@ -130,3 +130,5 @@ dmypy.json
 /misc/
 /missing_modality/mae_logs_230623-164625/
 /missing_modality/linear_probe_230623-164625/
+/weights/
+/weights/

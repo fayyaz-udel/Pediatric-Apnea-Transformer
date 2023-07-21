@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.utils import shuffle
 import tensorflow as tf
 from metrics import Result
+from data.noise_util import add_noise_to_data
 
 
 def sigmoid(x):
@@ -27,6 +28,9 @@ def test(config):
 
     for fold in range(FOLD):
         x_test = x[fold]
+        if config.get("test_noise_snr"):
+            x_test = add_noise_to_data(x_test, config["test_noise_snr"])
+
         y_test = y[fold]  # For MultiClass keras.utils.to_categorical(y[fold], num_classes=2)
 
         model = tf.keras.models.load_model(config["model_path"] + str(fold), compile=False)
