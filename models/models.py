@@ -12,97 +12,95 @@ from .transformer import create_transformer_model, mlp, create_hybrid_transforme
 
 
 
-def create_10_model(input_shape):
-    filter_count = [64, 32, 8]
+def create_cnn_model(input_shape):
     model = Sequential()
-    for i in range(1):
-        model.add(Conv1D(filter_count[i], 128))
+    for i in range(5): # 10
+        model.add(Conv1D(45, 32, padding='same'))
         model.add(BatchNormalization())
         model.add(Activation(relu))
         model.add(MaxPooling1D())
-        model.add(Dropout(0.1))
+        model.add(Dropout(0.5))
 
-    model.add(GlobalAveragePooling1D())
-    model.add(Dense(128))
-    model.add(BatchNormalization())
-    model.add(Activation(relu))
-    model.add(Dropout(0.1))
-    model.add(Dense(64))
-    model.add(BatchNormalization())
-    model.add(Activation(relu))
-    model.add(Dropout(0.1))
+    model.add(Flatten())
+    for i in range(2): #4
+        model.add(Dense(512))
+        model.add(BatchNormalization())
+        model.add(Activation(relu))
+        model.add(Dropout(0.5))
+
     model.add(Dense(1, activation='sigmoid'))
 
     return model
 
 
-def create_58model(input_a_shape, weight=1e-3):
+def create_cnnlstm_model(input_a_shape, weight=1e-3):
+    cnn_filters = 32 # 128
+    cnn_kernel_size = 4 # 4
     input1 = Input(shape=input_a_shape)
     input1 = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
                                               beta_initializer="glorot_uniform",
                                               gamma_initializer="glorot_uniform")(input1)
-    x1 = Conv1D(16, 128, activation='relu')(input1)
-    x1 = BatchNormalization()(x1)
-    x1 = MaxPooling1D()(x1)
-    x1 = Conv1D(8, 128, activation='relu')(x1)
-    x1 = BatchNormalization()(x1)
-    x1 = MaxPooling1D()(x1)
-    x1 = Conv1D(4, 128, activation='relu')(x1)
+    x1 = Conv1D(cnn_filters, cnn_kernel_size, activation='relu')(input1)
+    x1 = Conv1D(cnn_filters, cnn_kernel_size, activation='relu')(x1)
     x1 = BatchNormalization()(x1)
     x1 = MaxPooling1D()(x1)
 
-    x1 = LSTM(32, return_sequences=True)(x1)
-    x1 = LSTM(16, return_sequences=True)(x1)
-    x1 = LSTM(4, return_sequences=True)(x1)
+    x1 = Conv1D(cnn_filters, cnn_kernel_size, activation='relu')(x1)
+    x1 = BatchNormalization()(x1)
+    x1 = MaxPooling1D()(x1)
+
+    x1 = Conv1D(cnn_filters, cnn_kernel_size, activation='relu')(x1)
+    x1 = BatchNormalization()(x1)
+    x1 = MaxPooling1D()(x1)
+
+    x1 = LSTM(32, return_sequences=True)(x1) #256
+    x1 = LSTM(32, return_sequences=True)(x1) #256
+    x1 = LSTM(32)(x1) #256
     x1 = Flatten()(x1)
-    x1 = Dense(32, activation='relu')(x1)
-    x1 = Dense(32, activation='relu')(x1)
+
+    x1 = Dense(32, activation='relu')(x1) #64
+    x1 = Dense(32, activation='relu')(x1) #64
     outputs = Dense(1, activation='sigmoid')(x1)
 
     model = Model(inputs=input1, outputs=outputs)
     return model
 
 
-def create_100model(input_a_shape):
+def create_semscnn_model(input_a_shape):
     input1 = Input(shape=input_a_shape)
-    input1 = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
-                                              beta_initializer="glorot_uniform",
-                                              gamma_initializer="glorot_uniform")(input1)
-    x1 = Conv1D(128, 32)(input1)
-    x1 = Conv1D(64, 32)(x1)
+    # input1 = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
+    #                                           beta_initializer="glorot_uniform",
+    #                                           gamma_initializer="glorot_uniform")(input1)
+    x1 = Conv1D(45, 32, strides=1)(input1) #kernel_size=11
+    x1 = Conv1D(45, 32, strides=2)(x1) #64 kernel_size=11
+    x1 = BatchNormalization()(x1)
+    x1 = Activation(relu)(x1)
+    x1 = MaxPooling1D()(x1)
 
-    # Channel-wise attention module
-    concat = x1
-    squeeze = GlobalAveragePooling1D()(concat)
-    excitation = Dense(64, activation='relu')(squeeze)
-    excitation = Dense(32, activation='sigmoid')(excitation)
-    excitation = Reshape((1, 32))(excitation)
+    x1 = Conv1D(45, 32, strides=2)(x1) #64 kernel_size=11
+    x1 = BatchNormalization()(x1)
+    x1 = Activation(relu)(x1)
+    x1 = MaxPooling1D()(x1)
 
-    for i in range(4):
-        x1 = excitation  # LayerNormalization(epsilon=1e-6)(encoded_patches) # TODO
-        attention_output = MultiHeadAttention(
-            num_heads=4, key_dim=32)(x1, x1)
-        x2 = Add()([attention_output, excitation])
-        x3 = LayerNormalization(epsilon=1e-6)(x2)
-        x3 = mlp(x3, [64, 32], 0, 0)  # i *
-        encoded_patches = Add()([x3, x2])
+    x1 = Conv1D(45, 32, strides=2)(x1) #64 kernel_size=11
+    x1 = BatchNormalization()(x1)
+    x1 = Activation(relu)(x1)
+    x1 = MaxPooling1D()(x1)
 
-    x = LayerNormalization(epsilon=1e-6)(encoded_patches)
-    x = GlobalAveragePooling1D()(x)
-    # x = Concatenate()([x, demo])
-    features = mlp(x, [128, 64], 0.0, 0)
-
-    logits = Dense(1, activation='sigmoid')(features)
+    squeeze = Flatten()(x1)
+    excitation = Dense(128, activation='relu')(squeeze)
+    excitation = Dense(64, activation='relu')(excitation)
+    logits = Dense(1, activation='sigmoid')(excitation)
     model = Model(inputs=input1, outputs=logits)
     return model
 
 
 model_dict = {
 
-    "10": create_10_model((60 * 32, 7)),
-    "100": create_100model((60 * 32, 7)),
-    "58": create_58model((60 * 32, 7)),
-    "hybrid": create_hybrid_transformer_model(),
+    "cnn": create_cnn_model((60 * 32, 3)),
+    "sem-mscnn": create_semscnn_model((60 * 32, 3)),
+    "cnn-lstm": create_cnnlstm_model((60 * 32, 3)),
+    "hybrid": create_hybrid_transformer_model((60 * 32, 3)),
 }
 
 
@@ -134,5 +132,5 @@ if __name__ == "__main__":
         "channels": [14, 18, 19, 20],
     }
     model = get_model(config)
-    model.build(input_shape=(1, 60 * 32, 7))
+    model.build(input_shape=(1, 60 * 32, 10))
     print(model.summary())

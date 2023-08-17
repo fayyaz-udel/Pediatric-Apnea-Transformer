@@ -47,8 +47,8 @@ for ch in channel_list_chat:
     print(chstr, chs)
     config = {
         "data_path": "D:\\Data\\chat_3_64.npz",
-        "model_path": "./weights/chat100/f",
-        "model_name": "Transformer_chat2_"+ chstr,
+        "model_path": "./weights/hybrid_chat_all/f",
+        "model_name": "hybrid_"+ chstr,
         "regression": False,
 
         "transformer_layers": 5,  # best 5
@@ -60,5 +60,5 @@ for ch in channel_list_chat:
         "epochs": 100,  # best 200
         "channels": chs,
     }
-    train(config)
-    test(config)
+    train(config, 0)
+    # test(config, 0)

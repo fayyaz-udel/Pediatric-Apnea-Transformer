@@ -1,6 +1,6 @@
 import gc
 
-from test import test
+from test import test, test_age_seperated
 from train import train
 
 # "EOG LOC-M2",  # 0
@@ -44,9 +44,9 @@ for ch in channel_list:
         chstr += name
         chs = chs + sig_dict[name]
     config = {
-        "data_path": "D:\\Data\\nch_30x64.npz",
+        "data_path": "D:\\Data\\nch_30x64_seperated_age_",
         "model_path": "./weights/semscnn_ecgspo2/f",
-        "model_name": "sem-mscnn_" + chstr,
+        "model_name": "sem-mscnn",# + chstr,
         "regression": False,
 
         "transformer_layers": 5,  # best 5
@@ -58,6 +58,6 @@ for ch in channel_list:
         "epochs": 100,  # best 200
         "channels": chs,
     }
-    train(config, 0)
-    test(config, 0)
+    #train(config)
+    test_age_seperated(config)
     gc.collect()

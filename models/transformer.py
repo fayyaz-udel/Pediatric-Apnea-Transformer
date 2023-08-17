@@ -101,8 +101,8 @@ def create_transformer_model(input_shape, num_patches,
 
 
 
-def create_hybrid_transformer_model():
-    transformer_units = [32,32]
+def create_hybrid_transformer_model(input_shape):
+    transformer_units =  [32,32]
     transformer_layers = 2
     num_heads = 4
     l2_weight = 0.001
@@ -110,20 +110,19 @@ def create_hybrid_transformer_model():
     mlp_head_units = [256, 128]
     num_patches=30
     projection_dim=  32
-    input_shape = (60 * 32, 5)
 
-
+    # Conv1D(32...
     input1 = Input(shape=input_shape)
-    conv11 = Conv1D(32, 256)(input1) #13
-    conv12 = Conv1D(32, 256)(input1) #13
-    conv13 = Conv1D(32, 256)(input1) #13
+    conv11 = Conv1D(16, 256)(input1) #13
+    conv12 = Conv1D(16, 256)(input1) #13
+    conv13 = Conv1D(16, 256)(input1) #13
 
     pwconv1 = SeparableConvolution1D(32, 1)(input1)
     pwconv2 = SeparableConvolution1D(32, 1)(pwconv1)
 
-    conv21 = Conv1D(32, 256)(conv11) # 7
-    conv22 = Conv1D(32, 256)(conv12) # 7
-    conv23 = Conv1D(32, 256)(conv13) # 7
+    conv21 = Conv1D(16, 256)(conv11) # 7
+    conv22 = Conv1D(16, 256)(conv12) # 7
+    conv23 = Conv1D(16, 256)(conv13) # 7
 
     concat = keras.layers.concatenate([conv21, conv22, conv23], axis=-1)
     concat = Dense(64, activation=relu)(concat) #192
