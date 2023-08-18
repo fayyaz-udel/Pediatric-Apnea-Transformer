@@ -11,18 +11,22 @@ from scipy import signal
 import numpy as np
 
 ### DATASET ###
-data = np.load("D:\\nch_30x128_test.npz", allow_pickle=True)
+data = np.load(r"\media\NSSR Dataset\nch_30x128_test.npz", allow_pickle=True)
+# Concating folds together
 x = np.concatenate((data['x'][0],data['x'][1], data['x'][2], data['x'][3], data['x'][4]), axis=0)
 y_apnea = np.concatenate((data['y_apnea'][0],data['y_apnea'][1], data['y_apnea'][2], data['y_apnea'][3], data['y_apnea'][4]), axis=0)
 y_hypopnea = np.concatenate((data['y_hypopnea'][0],data['y_hypopnea'][1], data['y_hypopnea'][2], data['y_hypopnea'][3], data['y_hypopnea'][4]), axis=0)
 y = np.sign(y_apnea + y_hypopnea)
 
 
+
+# Transform to Frequency space
 xx = np.zeros((x.shape[0], 128, 30, 1))
 for i in range(x.shape[0]):
     f, t, Zxx = signal.stft(x[i, :, 5], fs=128, padded=False)
     Zxx= np.abs(Zxx)[:128, :30]
     xx[i, :, :, 0] = ((Zxx-np.min(Zxx))/(np.max(Zxx)-np.min(Zxx)))
+
 
 train_ds = tf.data.Dataset.from_tensor_slices((xx))
 train_ds = train_ds.shuffle(BUFFER_SIZE).batch(BATCH_SIZE).prefetch(AUTO)

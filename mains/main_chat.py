@@ -46,7 +46,7 @@ for ch in channel_list_chat:
         chs = chs + sig_dict_chat[name]
     print(chstr, chs)
     config = {
-        "data_path": "D:\\Data\\chat_3_64.npz",
+        "data_path": "/media/hamed/NSSR Dataset/Data/chat_3_64.npz",#"D:\\Data\\chat_3_64.npz",
         "model_path": "./weights/hybrid_chat_all/f",
         "model_name": "hybrid_"+ chstr,
         "regression": False,
