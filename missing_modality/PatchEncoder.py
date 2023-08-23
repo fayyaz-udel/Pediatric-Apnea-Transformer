@@ -100,7 +100,7 @@ class PatchEncoder(layers.Layer):
 
     def show_masked_image(self, patches, unmask_indices):
         # choose a random patch and it corresponding unmask index
-        idx = np.random.choice(patches.shape[0])
+        idx = np.random.choice(patches.inp_dim[0])
         patch = patches[idx]
         unmask_index = unmask_indices[idx]
 
@@ -109,6 +109,6 @@ class PatchEncoder(layers.Layer):
 
         # iterate of the new_patch and plug the unmasked patches
         count = 0
-        for i in range(unmask_index.shape[0]):
+        for i in range(unmask_index.inp_dim[0]):
             new_patch[unmask_index[i]] = patch[unmask_index[i]]
         return new_patch, idx

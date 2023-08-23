@@ -94,8 +94,8 @@ def load_data(path):
                 labels_apnea = labels_apnea[samples]
                 labels_hypopnea = labels_hypopnea[samples]
 
-                data = np.zeros((signals.shape[0], EPOCH_DURATION * FREQ, s_count + 3))
-                for i in range(signals.shape[0]):  # for each epoch
+                data = np.zeros((signals.inp_dim[0], EPOCH_DURATION * FREQ, s_count + 3))
+                for i in range(signals.inp_dim[0]):  # for each epoch
                     # data[i, :len(demo_arr), -1] = demo_arr TODO
                     data[i, :, -2], data[i, :, -3] = extract_rri(signals[i, ECG_SIG, :], FREQ, float(EPOCH_DURATION))
                     for j in range(s_count):  # for each signal

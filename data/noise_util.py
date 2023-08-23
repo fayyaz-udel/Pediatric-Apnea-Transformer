@@ -16,7 +16,7 @@ def add_noise_to_signal(signal, target_snr_db = 20):
 
 
 def add_noise_to_data(data, target_snr_db = 20):
-    for sample in range(data.shape[0]):
-        for channel in range(data.shape[2]):
+    for sample in range(data.inp_dim[0]):
+        for channel in range(data.inp_dim[2]):
             data[sample, :, channel] = add_noise_to_signal(data[sample, :, channel], target_snr_db)
     return data

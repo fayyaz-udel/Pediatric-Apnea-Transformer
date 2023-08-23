@@ -24,24 +24,24 @@ from scipy.interpolate import splev, splrep
 ######### ADDED IN THIS STEP #########
 # RRI #11
 # Ramp #12
-# Demo #13
 
 
-SIGS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+SIGS = [0,3, 5, 6, 9, 10, 4]
 s_count = len(SIGS)
 
 THRESHOLD = 3
-PATH = "D:\\nch_30x64\\"
+PATH = "/media/hamed/NSSR Dataset/nch_30x64/"
 FREQ = 64
 EPOCH_DURATION = 30
 ECG_SIG = 4
-OUT_PATH = "D:\\nch_30x64"
+OUT_PATH = "/media/hamed/NSSR Dataset/nch_30x64"
+
 
 def extract_rri(signal, ir, CHUNK_DURATION):
     tm = np.arange(0, CHUNK_DURATION, step=1 / float(ir))  # TIME METRIC FOR INTERPOLATION
 
     filtered, _, _ = st.filter_signal(signal=signal, ftype="FIR", band="bandpass", order=int(0.3 * FREQ),
-                                      frequency=[3, 45], sampling_rate=FREQ, )
+                                      frequency=[3, 31], sampling_rate=FREQ, )
     (rpeaks,) = hamilton_segmenter(signal=filtered, sampling_rate=FREQ)
     (rpeaks,) = correct_rpeaks(signal=filtered, rpeaks=rpeaks, sampling_rate=FREQ, tol=0.05)
 
@@ -57,8 +57,7 @@ def extract_rri(signal, ir, CHUNK_DURATION):
 
 
 def load_data(path):
-    # demo = pd.read_csv("../misc/result.csv") # TODO
-    ahi = pd.read_csv(r"D:\Data\AHI.csv")
+    ahi = pd.read_csv(r"/media/hamed/NSSR Dataset/Data/AHI.csv")
     ahi_dict = dict(zip(ahi.Study, ahi.AHI))
     root_dir = os.path.expanduser(path)
     file_list = os.listdir(root_dir)
@@ -106,9 +105,6 @@ def load_data(path):
                 labels_apnea = study_data['labels_apnea']
                 labels_hypopnea = study_data['labels_hypopnea']
 
-                identifier = study.split('\\')[-1].split('_')[0] + "_" + study.split('\\')[-1].split('_')[1]
-                # demo_arr = demo[demo['id'] == identifier].drop(columns=['id']).to_numpy().squeeze() # TODO
-
                 y_c = labels_apnea + labels_hypopnea
                 neg_samples = np.where(y_c == 0)[0]
                 pos_samples = list(np.where(y_c > 0)[0])
@@ -122,10 +118,9 @@ def load_data(path):
                 labels_apnea = labels_apnea[samples]
                 labels_hypopnea = labels_hypopnea[samples]
 
-                data = np.zeros((signals.shape[0], EPOCH_DURATION * FREQ, s_count + 3))
+                data = np.zeros((signals.shape[0], EPOCH_DURATION * FREQ, s_count + 2))
                 for i in range(signals.shape[0]):  # for each epoch
-                    # data[i, :len(demo_arr), -1] = demo_arr TODO
-                    data[i, :, -2], data[i, :, -3] = extract_rri(signals[i, ECG_SIG, :], FREQ, float(EPOCH_DURATION))
+                    data[i, :, -1], data[i, :, -2] = extract_rri(signals[i, ECG_SIG, :], FREQ, float(EPOCH_DURATION))
                     for j in range(s_count):  # for each signal
                         data[i, :, j] = resample(signals[i, SIGS[j], :], EPOCH_DURATION * FREQ)
 
@@ -139,14 +134,9 @@ def load_data(path):
                     aggregated_label_apnea = np.concatenate((aggregated_label_apnea, labels_apnea), axis=0)
                     aggregated_label_hypopnea = np.concatenate((aggregated_label_hypopnea, labels_hypopnea), axis=0)
 
-
-        x.append(aggregated_data)
-        y_apnea.append(aggregated_label_apnea)
-        y_hypopnea.append(aggregated_label_hypopnea)
-
-    return x, y_apnea, y_hypopnea
+        np.savez_compressed(OUT_PATH + "_" + str(idx), x=aggregated_data, y_apnea=aggregated_label_apnea,
+                            y_hypopnea=aggregated_label_hypopnea)
 
 
 if __name__ == "__main__":
-    x, y_apnea, y_hypopnea = load_data(PATH)
-    np.savez_compressed(OUT_PATH, x=x, y_apnea=y_apnea, y_hypopnea=y_hypopnea)
+    load_data(PATH)

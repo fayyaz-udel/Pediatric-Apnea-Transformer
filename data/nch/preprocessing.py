@@ -185,7 +185,7 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
     total_apnea_event_second = 0
     total_hypopnea_event_second = 0
 
-    for seq in range(data.shape[0]):
+    for seq in range(data.inp_dim[0]):
         epoch_set = set(range(starts[seq], starts[seq] + int(CHUNK_DURATION)))
         if is_apnea_available:
             apnea_seconds = len(apnea_events_set.intersection(epoch_set))
@@ -212,7 +212,7 @@ def preprocess(i, annotation_modifier, out_dir, ahi_dict):
         out_dir + '\\' + study + "_" + str(total_apnea_event_second) + "_" + str(total_hypopnea_event_second),
         data=data, labels_apnea=labels_apnea, labels_hypopnea=labels_hypopnea)
 
-    return data.shape[0]
+    return data.inp_dim[0]
 
 
 if __name__ == "__main__":
