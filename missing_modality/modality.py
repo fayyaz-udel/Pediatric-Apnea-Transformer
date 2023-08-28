@@ -125,6 +125,16 @@ def load_data(m_list, x_train, x_test, miss_modal=[], noise_modal={}):
         else:
             m.x_train = x_train[:, :, m.index]
             m.x_test = x_test[:, :, m.index]
+        ###########################################################
+        ###########################################################
+        m.x_train = normalize(m.x_train)
+        m.x_test = normalize(m.x_test)
+
+
+def normalize(x):
+    x = np.clip(x, np.percentile(x, 0.1), np.percentile(x, 99.9))
+    x = (x - np.min(x)) / (np.max(x) - np.min(x))
+    return x
 
 
 ############################################## NOISE/MISSING MODALITY ##################################################

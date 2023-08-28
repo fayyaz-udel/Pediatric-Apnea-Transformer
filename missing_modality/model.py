@@ -65,3 +65,11 @@ def create_multimodal_model(m_list):
     ### FUSION NETWORK ###
     label = create_fusion_network(m_list)(get_encs(m_list) + get_a_s(m_list))
     return keras.Model(get_inps(m_list), label, name='multimodal_model')
+
+if __name__ == "__main__":
+    MODALS = ["eog", "eeg", "resp", "af"]#, "spo2", "rri", "amp"]
+
+    m_list = generate_modalities(MODALS)
+    model = create_unimodal_model(m_list)
+    model.summary()
+    print("done")
