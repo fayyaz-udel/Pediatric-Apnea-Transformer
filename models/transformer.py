@@ -3,8 +3,8 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from keras import Model
 from keras.activations import sigmoid, relu
-from keras.layers import Dense, Dropout, Reshape, LayerNormalization, MultiHeadAttention, Add, Flatten, Input, Layer, \
-    GlobalAveragePooling1D, AveragePooling1D, Concatenate, SeparableConvolution1D, Conv1D
+from keras.layers import Dense, Dropout, LayerNormalization, MultiHeadAttention, Add, Input, Layer, \
+    GlobalAveragePooling1D, SeparableConvolution1D, Conv1D
 from keras.regularizers import L2
 
 
@@ -24,7 +24,7 @@ class Patches(Layer):
             rates=[1, 1, 1, 1],
             padding="VALID",
         )
-        patch_dims = patches.inp_dim[-1]
+        patch_dims = patches.shape[-1]
         patches = tf.reshape(patches,
                              [batch_size, -1, patch_dims])
         return patches
@@ -42,7 +42,7 @@ class PatchEncoder(Layer):
             input_dim=num_patches, output_dim=projection_dim)
 
     def call(self, patch):
-        positions = tf.range(start=0, limit=self.num_patches, delta=1)
+        # positions = tf.range(start=0, limit=self.num_patches, delta=1)
         encoded = self.projection(patch) # + self.position_embedding(positions)
         return encoded
 

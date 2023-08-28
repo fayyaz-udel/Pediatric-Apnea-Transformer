@@ -1,15 +1,9 @@
-import keras
 from keras import Input, Model
-from keras.layers import Dense, Flatten, MaxPooling2D, Conv2D, BatchNormalization, LSTM, Bidirectional, Permute, \
-    Reshape, GRU, Conv1D, MaxPooling1D, Activation, Dropout, GlobalAveragePooling1D, multiply, MultiHeadAttention, Add, \
-    LayerNormalization, SeparableConvolution1D
+from keras.activations import relu
+from keras.layers import Dense, Flatten, BatchNormalization, LSTM, Conv1D, MaxPooling1D, Activation, Dropout
 from keras.models import Sequential
-from keras.activations import relu, sigmoid
-from keras.regularizers import l2
-import tensorflow_addons as tfa
-from .transformer import create_transformer_model, mlp, create_hybrid_transformer_model
 
-
+from .transformer import create_transformer_model, create_hybrid_transformer_model
 
 
 def create_cnn_model(input_shape):

@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.utils import shuffle
 import tensorflow as tf
 from metrics import Result
-from data.noise_util import add_noise_to_data
+from missing_modality.noise_util import add_noise_to_data
 
 
 def sigmoid(x):
@@ -33,7 +33,7 @@ def test(config, fold=None):
 
         y_test = y[fold]  # For MultiClass keras.utils.to_categorical(y[fold], num_classes=2)
 
-        model = tf.keras.models.load_model(config["model_path"] + str(fold), compile=False)
+        model = tf.keras.models.load_model(config["model_path"] + str(fold))
 
         predict = model.predict(x_test)
         y_score = predict

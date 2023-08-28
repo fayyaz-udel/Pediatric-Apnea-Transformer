@@ -1,8 +1,9 @@
-from missing_modality.util import transform2freq
+import numpy as np
+from scipy import signal
 
 
 class Modality:
-    def __init__(self, name, index, inp_dim, z_dim, need_freq=False):
+    def __init__(self, name, index, inp_dim, z_dim, need_freq=False, need_reshape=False):
         self.name = name
         self.index = index
         self.inp_dim = inp_dim
@@ -23,6 +24,7 @@ class Modality:
         self.x_train = None
         self.x_test = None
         self.need_freq = need_freq
+        self.need_reshape = need_reshape
 
 
 def get_inps(ms):
@@ -103,26 +105,87 @@ def generate_loss(m_list, dec_loss='mae', cls_loss='binary_crossentropy'):
     return loss
 
 
-def load_data(m_list, x_train, x_test):
+def load_data(m_list, x_train, x_test, miss_modal=[], noise_modal={}):
     for m in m_list:
+        ################  missing modality  #######################
+        if m.name in miss_modal:
+            x_train[:, :, m.index] = np.zeros_like(x_train[:, :, m.index])
+            x_test[:, :, m.index] = np.zeros_like(x_test[:, :, m.index])
+        ################  noisy modality   ########################
+        elif m.name in list(noise_modal.keys()):
+            x_train[:, :, m.index] = add_noise_to_data(x_train[:, :, m.index], target_snr_db=noise_modal[m.name])
+            x_test[:, :, m.index] = add_noise_to_data(x_test[:, :, m.index], target_snr_db=noise_modal[m.name])
+        ###########################################################
         if m.need_freq:
             m.x_train = transform2freq(x_train, m.index)
             m.x_test = transform2freq(x_test, m.index)
+        elif m.need_reshape:
+            m.x_train = resize(x_train, m.index)
+            m.x_test = resize(x_test, m.index)
         else:
             m.x_train = x_train[:, :, m.index]
             m.x_test = x_test[:, :, m.index]
 
 
-def generate_modalities():
-    m_list = []
-    m_list.append(Modality("eog", [0], (128, 16, 1), (2, 2, 8), need_freq=True))
-    m_list.append(Modality("eeg", [1], (128, 16, 1), (2, 2, 8), need_freq=True))
-    # m_list.append(Modality("resp", [2], (1920, 1), (4, 8)))
-    #
-    # m_list.append(Modality("af", [3], (1920, 1), (4, 8)))
-    # m_list.append(Modality("spo2", [4], (1920, 1), (4, 8)))
-    # m_list.append(Modality("co2", [5], (1920, 1), (4, 8)))
-    # m_list.append(Modality("rri", [7], (1920, 1), (4, 8)))
-    # m_list.append(Modality("amp", [8], (1920, 1), (4, 8)))
+############################################## NOISE/MISSING MODALITY ##################################################
+def add_noise_to_signal(signal, target_snr_db=20):
+    signal_watts = signal ** 2
+    # Calculate signal power and convert to dB
+    sig_avg_watts = np.mean(signal_watts)
+    sig_avg_db = 10 * np.log10(sig_avg_watts)
+    # Calculate noise according to [2] then convert to watts
+    noise_avg_db = sig_avg_db - target_snr_db
+    noise_avg_watts = 10 ** (noise_avg_db / 10)
+    y_noise = np.random.normal(0, np.sqrt(noise_avg_watts), (len(signal_watts), 1))
+    return signal + y_noise
 
+
+def add_noise_to_data(data, target_snr_db=20):
+    for sample in range(data.shape[0]):
+        data[sample, :, :] = add_noise_to_signal(data[sample, :, :], target_snr_db)
+    return data
+
+
+########################################################################################################################
+
+# def get_augmentation_model():
+#     model = keras.Sequential(
+#         [layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),],
+#         name="data_augmentation",
+#     )
+#     return model
+
+
+def transform2freq(x, idx):
+    out_x = np.zeros((x.shape[0], 128, 16, 1))
+    for i in range(x.shape[0]):
+        f, t, Zxx = signal.stft(x[i, :, idx], fs=64, padded=False)
+        Zxx = np.squeeze(Zxx)
+        Zxx = np.abs(Zxx)[:128, :16]
+        out_x[i, :, :, 0] = ((Zxx - np.min(Zxx)) / (np.max(Zxx) - np.min(Zxx)))
+    return np.nan_to_num(out_x)
+
+
+def resize(x, idx):
+    out_x = np.zeros((x.shape[0], 128, 16, 1))
+    for i in range(x.shape[0]):
+        out_x[i, :, :, 0] = np.reshape(np.pad(x[i, :, idx], [(0, 0), (0, 128)]), out_x.shape[1:3])
+    return np.nan_to_num(out_x)
+
+
+def generate_modalities(m_names):
+    m_list = []
+    modals = {
+        "eog": Modality("eog", [0], (128, 16, 1), (16, 16, 1), need_freq=True),
+        "eeg": Modality("eeg", [1], (128, 16, 1), (16, 16, 1), need_freq=True),
+        "resp": Modality("resp", [2], (128, 16, 1), (16, 16, 1), need_reshape=True),
+
+        "af": Modality("af", [3], (128, 16, 1), (16, 16, 1), need_reshape=True),
+        "spo2": Modality("spo2", [4], (128, 16, 1), (16, 16, 1), need_reshape=True),
+        "co2": Modality("co2", [5], (128, 16, 1), (16, 16, 1), need_reshape=True),
+        "rri": Modality("rri", [7], (128, 16, 1), (16, 16, 1), need_reshape=True),
+        "amp": Modality("amp", [8], (128, 16, 1), (16, 16, 1), need_reshape=True),
+    }
+    for m in m_names:
+        m_list.append(modals[m])
     return m_list
