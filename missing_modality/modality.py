@@ -104,6 +104,13 @@ def generate_loss(m_list, dec_loss='mae', cls_loss='binary_crossentropy'):
         loss[m.name + '_cls'] = cls_loss
     return loss
 
+def generate_loss_weights(m_list):
+    loss_weights = {}
+    for m in m_list:
+        loss_weights[m.name + '_dec'] = 1
+        loss_weights[m.name + '_cls'] = 1
+    return loss_weights
+
 
 def load_data(m_list, x_train, x_test, miss_modal=[], noise_modal={}):
     for m in m_list:
