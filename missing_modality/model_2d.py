@@ -7,9 +7,9 @@ from keras import layers
 from models.transformer import Patches, PatchEncoder, mlp
 
 
-def mlp(x, hidden_units, dropout_rate):
-    for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+def mlp(x, hidden_units, dropout_rate, name):
+    for i, units in enumerate(hidden_units):
+        x = layers.Dense(units, activation=tf.nn.gelu,name=name +"mlpl_" + str(i))(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -34,12 +34,12 @@ class Patches(layers.Layer):
 
 
 class PatchEncoder(layers.Layer):
-    def __init__(self, num_patches, projection_dim):
+    def __init__(self, num_patches, projection_dim, name):
         super().__init__()
         self.num_patches = num_patches
-        self.projection = layers.Dense(units=projection_dim)
+        self.projection = layers.Dense(units=projection_dim, name=name+"_lll1")
         self.position_embedding = layers.Embedding(
-            input_dim=num_patches, output_dim=projection_dim
+            input_dim=num_patches, output_dim=projection_dim, name=name+"_lll2"
         )
 
     def call(self, patch):
@@ -55,22 +55,22 @@ def create_decoder_2d(modality_str, input_shape=(16, 16, 1), num_heads=4, transf
     num_patches = (image_size // patch_size) ** 2
 
     inputs = layers.Input(shape=input_shape)
-    input_norm = layers.Normalization()(inputs)
-    input_resize = layers.Resizing(image_size, image_size)(input_norm)
+    input_norm = layers.Normalization(name=n+"_l1")(inputs)
+    input_resize = layers.Resizing(image_size, image_size,name=n+"_l2")(input_norm)
     patches = Patches(patch_size)(input_resize)
-    encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
+    encoded_patches = PatchEncoder(num_patches, projection_dim, name=n+"_l4")(patches)
 
-    for _ in range(transformer_layers):
-        x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
+    for li in range(transformer_layers):
+        x1 = layers.LayerNormalization(epsilon=1e-6, name=n+"_l5_" + str(li))(encoded_patches)
         attention_output = layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=projection_dim, dropout=0.1
+            num_heads=num_heads, key_dim=projection_dim, dropout=0.1, name=n+"_l6_" + str(li)
         )(x1, x1)
         x2 = layers.Add()([attention_output, encoded_patches])
-        x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
-        x3 = mlp(x3, hidden_units=transformer_units, dropout_rate=0.1)
+        x3 = layers.LayerNormalization(epsilon=1e-6, name=n+"_l7_" + str(li))(x2)
+        x3 = mlp(x3, hidden_units=transformer_units, dropout_rate=0.1, name=n+"_l8_" + str(li))
         encoded_patches = layers.Add()([x3, x2])
 
-    representation = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
+    representation = layers.LayerNormalization(epsilon=1e-6, name=n+"_l9")(encoded_patches)
     ##########################################################################
     if not cnn:
         x = layers.Flatten()(representation)
@@ -79,13 +79,13 @@ def create_decoder_2d(modality_str, input_shape=(16, 16, 1), num_heads=4, transf
     ##########################################################################
     else:
         x = tf.expand_dims(representation, -1)
-        x = layers.Conv2D(64, (4, 4), activation='relu', padding='same')(x)
+        x = layers.Conv2D(64, (4, 4), activation='relu', padding='same', name=n+"_l10")(x)
         x = layers.UpSampling2D((2, 1))(x)
-        x = layers.Conv2D(32, (8, 4), activation='relu', padding='same')(x)
+        x = layers.Conv2D(32, (8, 4), activation='relu', padding='same', name=n+"_l11")(x)
         x = layers.UpSampling2D((2, 1))(x)
-        x = layers.Conv2D(16, (16, 4), activation='relu', padding='same')(x)
+        x = layers.Conv2D(16, (16, 4), activation='relu', padding='same', name=n+"_l12")(x)
         x = layers.UpSampling2D((2, 1))(x)
-        outputs = layers.Conv2D(1, (32, 4), activation='sigmoid', padding='same')(x)
+        outputs = layers.Conv2D(1, (32, 4), activation='sigmoid', padding='same', name=n+"_l13")(x)
 
     model = keras.Model(inputs=inputs, outputs=outputs, name=n)
     return model
@@ -99,21 +99,21 @@ def create_encoder_2d(modality_str, input_shape=(128, 16, 1), num_heads=4, trans
     num_patches = (image_size // patch_size) ** 2
 
     inputs = layers.Input(shape=input_shape)
-    input_norm = layers.Normalization()(inputs)
-    input_resize = layers.Resizing(image_size, image_size)(input_norm)
+    input_norm = layers.Normalization(name=n+"_l1")(inputs)
+    input_resize = layers.Resizing(image_size, image_size, name=n+"_l2")(input_norm)
     patches = Patches(patch_size)(input_resize)
-    encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
+    encoded_patches = PatchEncoder(num_patches, projection_dim, name=n+"_l4")(patches)
 
-    for _ in range(transformer_layers):
-        x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
+    for li in range(transformer_layers):
+        x1 = layers.LayerNormalization(epsilon=1e-6, name=n+"_l5_" + str(li))(encoded_patches)
         attention_output = layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=projection_dim, dropout=0.1
+            num_heads=num_heads, key_dim=projection_dim, dropout=0.1, name=n+"_l6_" + str(li)
         )(x1, x1)
         x2 = layers.Add()([attention_output, encoded_patches])
-        x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
-        x3 = mlp(x3, hidden_units=transformer_units, dropout_rate=0.1)
+        x3 = layers.LayerNormalization(epsilon=1e-6, name=n+"_l7_" + str(li))(x2)
+        x3 = mlp(x3, hidden_units=transformer_units, name=n+"_l8_" + str(li), dropout_rate=0.1)
         encoded_patches = layers.Add()([x3, x2])
 
-    representation = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
+    representation = layers.LayerNormalization(epsilon=1e-6, name=n+"_l9")(encoded_patches)
     representation = tf.expand_dims(representation, -1)
     return keras.Model(inputs=inputs, outputs=representation, name=n)

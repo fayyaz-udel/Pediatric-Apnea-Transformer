@@ -11,7 +11,7 @@ PHASE = "unimodal"  # unimodal, multimodal
 DATA_PATH = "/home/hamedcan/d/nch_30x64_"
 EPOCHS = 100
 BATCH_SIZE = 1024
-MODALS = ["eeg", "resp", "spo2", "rri"]
+MODALS = ["eeg", "resp", "spo2", "ecg", "co2"]
 DEL_MODALS = []
 NOISE_MODALS = {}
 
