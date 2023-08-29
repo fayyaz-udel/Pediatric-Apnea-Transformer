@@ -45,7 +45,7 @@ def create_unimodal_model(m_list):
     for m in m_list:
         m.inp = keras.Input(m.inp_dim, name=m.name + '_inp')
         m.enc = create_encoder_2d(m.name, m.inp_dim)(m.inp)
-        m.dec = create_decoder_2d(m.name, m.z_dim)(m.enc)
+        m.dec = create_decoder_2d(m.name, m.z_dim, output_shape=m.inp_dim)(m.enc)
         m.cls = create_classifier(m.name, m.z_dim)(m.enc)
 
     return keras.Model(get_inps(m_list), get_decs(m_list) + get_clss(m_list))
@@ -67,7 +67,7 @@ def create_multimodal_model(m_list):
     return keras.Model(get_inps(m_list), label, name='multimodal_model')
 
 if __name__ == "__main__":
-    MODALS = ["ecg", "spo2", "rri", "amp"]
+    MODALS = ["ecg"]
 
     m_list = generate_modalities(MODALS)
     model = create_unimodal_model(m_list)

@@ -3,7 +3,7 @@ import gc
 import keras
 from keras.callbacks import EarlyStopping
 
-from metrics import Result, NRMSE
+from metrics import Result, NMSE
 from missing_modality.modality import *
 from missing_modality.model import create_unimodal_model, create_multimodal_model
 
@@ -48,7 +48,7 @@ for fold in range(FOLDS):
         if TRAIN:
             early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
             model = create_unimodal_model(m_list)
-            model.compile(optimizer='adam', loss=generate_loss(m_list, dec_loss=NRMSE), metrics='acc')
+            model.compile(optimizer='adam', loss=generate_loss(m_list,dec_loss=NMSE), metrics='acc')
             history = model.fit(x=get_x_train(m_list), y=get_x_train(m_list) + [y_train] * len(m_list),
                                 validation_split=0.1, epochs=EPOCHS, batch_size=BATCH_SIZE,
                                 callbacks=[early_stopper])

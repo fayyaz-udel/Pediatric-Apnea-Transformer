@@ -121,5 +121,5 @@ class Result:
 
 
 
-def NRMSE(y_true, y_pred):
-    return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1)) / K.clip(K.mean(K.abs(y_true), axis=-1), K.epsilon(), None)
+def NMSE(y_true, y_pred):
+    return K.mean(K.square(y_pred - y_true), axis=-1) / (K.clip(K.mean(K.abs(y_true), axis=-1), K.epsilon(), None) * 2)

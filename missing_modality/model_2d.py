@@ -85,7 +85,7 @@ def create_decoder_2d(modality_str, input_shape=(16, 16, 1), num_heads=4, transf
         x = layers.UpSampling2D((2, 1))(x)
         x = layers.Conv2D(16, (16, 4), activation='relu', padding='same', name=n+"_l12")(x)
         x = layers.UpSampling2D((2, 1))(x)
-        outputs = layers.Conv2D(1, (32, 4), activation='sigmoid', padding='same', name=n+"_l13")(x)
+        outputs = layers.Conv2D(output_shape[-1], (32, 4), activation='sigmoid', padding='same', name=n+"_l13")(x)
 
     model = keras.Model(inputs=inputs, outputs=outputs, name=n)
     return model
