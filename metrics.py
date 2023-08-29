@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
 import numpy as np
+import tensorflow.keras.backend as K
 from sklearn.metrics import confusion_matrix, f1_score, average_precision_score, roc_auc_score
 
 
@@ -117,3 +118,8 @@ class Result:
         file.write(self.get())
         file.flush()
         file.close()
+
+
+
+def NRMSE(y_true, y_pred):
+    return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1)) / K.mean(K.abs(y_true), axis=-1)

@@ -3,14 +3,14 @@ import gc
 import keras
 from keras.callbacks import EarlyStopping
 
-from metrics import Result
+from metrics import Result, NRMSE
 from missing_modality.modality import *
 from missing_modality.model import create_unimodal_model, create_multimodal_model
 
 PHASE = "unimodal"  # unimodal, multimodal
 DATA_PATH = "/home/hamedcan/d/nch_30x64_"
 EPOCHS = 100
-BATCH_SIZE = 1024
+BATCH_SIZE = 512
 MODALS = ["eeg", "resp", "spo2", "ecg", "co2"]
 DEL_MODALS = []
 NOISE_MODALS = {}
@@ -40,8 +40,6 @@ for fold in range(FOLDS):
             y_test = np.sign(data['y_apnea'] + data['y_hypopnea'])
         del data
     ######################################################################
-    x_train = np.float32(x_train)
-    x_test = np.float32(x_test)
     ######################################################################
     load_data(m_list, x_train, x_test, miss_modal=DEL_MODALS, noise_modal=NOISE_MODALS)  # , noise_modal={"eeg": 0.2}
     gc.collect()
@@ -50,7 +48,7 @@ for fold in range(FOLDS):
         if TRAIN:
             early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
             model = create_unimodal_model(m_list)
-            model.compile(optimizer='adam', loss=generate_loss(m_list), metrics='acc')
+            model.compile(optimizer='adam', loss=generate_loss(m_list, dec_loss=NRMSE), metrics='acc')
             history = model.fit(x=get_x_train(m_list), y=get_x_train(m_list) + [y_train] * len(m_list),
                                 validation_split=0.1, epochs=EPOCHS, batch_size=BATCH_SIZE,
                                 callbacks=[early_stopper])
