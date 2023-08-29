@@ -177,9 +177,10 @@ def transform2freq(x, idx):
 
 
 def resize(x, idx):
-    out_x = np.zeros((x.shape[0], 128, 16, 1))
-    for i in range(x.shape[0]):
-        out_x[i, :, :, 0] = np.reshape(np.pad(x[i, :, idx], [(0, 0), (0, 128)]), out_x.shape[1:3])
+    out_x = np.zeros((x.shape[0], 128, 16, len(idx)))
+    for n, id in enumerate(idx):
+        for i in range(x.shape[0]):
+            out_x[i, :, :, n] = np.reshape(np.pad(x[i, :, id], [(0, 128)]), out_x.shape[1:3])
     return np.nan_to_num(out_x)
 
 
@@ -193,6 +194,8 @@ def generate_modalities(m_names):
         "af": Modality("af", [3], (128, 16, 1), (16, 16, 1), need_reshape=True),
         "spo2": Modality("spo2", [4], (128, 16, 1), (16, 16, 1), need_reshape=True),
         "co2": Modality("co2", [5], (128, 16, 1), (16, 16, 1), need_reshape=True),
+        "ecg": Modality("ecg", [7, 8], (128, 16, 2), (16, 16, 1), need_reshape=True),
+
         "rri": Modality("rri", [7], (128, 16, 1), (16, 16, 1), need_reshape=True),
         "amp": Modality("amp", [8], (128, 16, 1), (16, 16, 1), need_reshape=True),
     }
