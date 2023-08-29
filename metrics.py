@@ -122,4 +122,4 @@ class Result:
 
 
 def NRMSE(y_true, y_pred):
-    return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1)) / K.mean(K.abs(y_true), axis=-1)
+    return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1)) / K.clip(K.mean(K.abs(y_true), axis=-1), K.epsilon(), None)
