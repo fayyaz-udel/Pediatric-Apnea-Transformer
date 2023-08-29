@@ -55,7 +55,7 @@ def create_multimodal_model(m_list):
     for m in m_list:
         m.inp = keras.Input(m.inp_dim, name=m.name + '_inp')
         m.enc = create_encoder_2d(m.name, m.inp_dim)(m.inp)
-        m.dec = create_decoder_2d(m.name, m.z_dim)(m.enc)
+        m.dec = create_decoder_2d(m.name, m.z_dim, output_shape=m.inp_dim)(m.enc)
         m.cls = create_classifier(m.name, m.z_dim)(m.enc)
 
         m.inp_flat = layers.Flatten()(m.inp)

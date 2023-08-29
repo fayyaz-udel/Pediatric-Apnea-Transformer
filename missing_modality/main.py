@@ -7,8 +7,8 @@ from metrics import Result, NMSE
 from missing_modality.modality import *
 from missing_modality.model import create_unimodal_model, create_multimodal_model
 
-PHASE = "unimodal"  # unimodal, multimodal
-DATA_PATH = "/home/hamedcan/d/nch_30x64_"
+PHASE = "multimodal"  # unimodal, multimodal
+DATA_PATH = "/media/hamed/NSSR Dataset/nch_30x64_"
 EPOCHS = 100
 BATCH_SIZE = 256
 MODALS = ["eeg", "resp", "spo2", "ecg", "co2"]
@@ -44,9 +44,9 @@ for fold in range(FOLDS):
     load_data(m_list, x_train, x_test, miss_modal=DEL_MODALS, noise_modal=NOISE_MODALS)  # , noise_modal={"eeg": 0.2}
     gc.collect()
     keras.backend.clear_session()
+    early_stopper = EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True)
     if PHASE == "unimodal":
         if TRAIN:
-            early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
             model = create_unimodal_model(m_list)
             model.compile(optimizer='adam', loss=generate_loss(m_list), metrics='acc')
             history = model.fit(x=get_x_train(m_list), y=get_x_train(m_list) + [y_train] * len(m_list),
@@ -58,9 +58,9 @@ for fold in range(FOLDS):
         model = create_multimodal_model(m_list)
         if TRAIN:
             model.compile(optimizer='adam', loss='binary_crossentropy', metrics='acc')
-            # model.load_weights('./weights/uniweights.h5', by_name=True, skip_mismatch=True)
+            model.load_weights('./weights/uniweights_' + str(fold) + '.h5', by_name=True, skip_mismatch=True)
             history = model.fit(x=get_x_train(m_list), y=y_train, validation_split=0.1,
-                                epochs=EPOCHS, batch_size=BATCH_SIZE)
+                                epochs=EPOCHS, batch_size=BATCH_SIZE, callbacks=[early_stopper])
             model.save_weights('./weights/mulweights_f' + str(fold) + '.h5')
         else:
             model.load_weights('./weights/mulweights_f' + str(fold) + '.h5')
