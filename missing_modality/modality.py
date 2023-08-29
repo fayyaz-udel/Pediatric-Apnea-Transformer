@@ -131,10 +131,13 @@ def load_data(m_list, x_train, x_test, miss_modal=[], noise_modal={}):
         m.x_test = normalize(m.x_test)
 
 
-def normalize(x):
-    x = np.clip(x, np.percentile(x, 0.1), np.percentile(x, 99.9))
-    x = (x - np.min(x)) / (np.max(x) - np.min(x))
-    return x
+def normalize(xx):
+    for i in range(xx.shape[-1]):
+        x = xx[:, :, :, i]
+        x = np.clip(x, np.percentile(x, 0.1), np.percentile(x, 99.9))
+        x = (x - np.min(x)) / (np.max(x) - np.min(x))
+        xx[:, :, :, i] = x
+    return xx
 
 
 ############################################## NOISE/MISSING MODALITY ##################################################
@@ -189,15 +192,12 @@ def generate_modalities(m_names):
     modals = {
         "eog": Modality("eog", [0], (128, 16, 1), (16, 16, 1), need_freq=True),
         "eeg": Modality("eeg", [1], (128, 16, 1), (16, 16, 1), need_freq=True),
-        "resp": Modality("resp", [2], (128, 16, 1), (16, 16, 1), need_reshape=True),
+        "resp": Modality("resp", [2, 3], (128, 16, 2), (16, 16, 1), need_reshape=True),
 
-        "af": Modality("af", [3], (128, 16, 1), (16, 16, 1), need_reshape=True),
         "spo2": Modality("spo2", [4], (128, 16, 1), (16, 16, 1), need_reshape=True),
         "co2": Modality("co2", [5], (128, 16, 1), (16, 16, 1), need_reshape=True),
         "ecg": Modality("ecg", [7, 8], (128, 16, 2), (16, 16, 1), need_reshape=True),
 
-        "rri": Modality("rri", [7], (128, 16, 1), (16, 16, 1), need_reshape=True),
-        "amp": Modality("amp", [8], (128, 16, 1), (16, 16, 1), need_reshape=True),
     }
     for m in m_names:
         m_list.append(modals[m])
