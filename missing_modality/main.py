@@ -10,12 +10,12 @@ from missing_modality.model import create_unimodal_model, create_multimodal_mode
 PHASE = "unimodal"  # unimodal, multimodal
 DATA_PATH = "/home/hamedcan/d/nch_30x64_"
 EPOCHS = 100
-BATCH_SIZE = 512
+BATCH_SIZE = 256
 MODALS = ["eeg", "resp", "spo2", "ecg", "co2"]
 DEL_MODALS = []
 NOISE_MODALS = {}
 
-FOLDS = 5
+FOLDS = 1
 TRAIN = True
 
 result = Result()
@@ -48,7 +48,7 @@ for fold in range(FOLDS):
         if TRAIN:
             early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
             model = create_unimodal_model(m_list)
-            model.compile(optimizer='adam', loss=generate_loss(m_list,dec_loss=NMSE), metrics='acc')
+            model.compile(optimizer='adam', loss=generate_loss(m_list), metrics='acc')
             history = model.fit(x=get_x_train(m_list), y=get_x_train(m_list) + [y_train] * len(m_list),
                                 validation_split=0.1, epochs=EPOCHS, batch_size=BATCH_SIZE,
                                 callbacks=[early_stopper])

@@ -199,7 +199,7 @@ def generate_modalities(m_names):
     modals = {
         "eog": Modality("eog", [0], (128, 16, 1), (16, 16, 1), need_freq=True),
         "eeg": Modality("eeg", [1], (128, 16, 1), (16, 16, 1), need_freq=True),
-        "resp": Modality("resp", [2, 3], (128, 16, 2), (16, 16, 1), need_reshape=True),
+        "resp": Modality("resp", [3], (128, 16, 1), (16, 16, 1), need_freq=True),
 
         "spo2": Modality("spo2", [4], (128, 16, 1), (16, 16, 1), need_reshape=True),
         "co2": Modality("co2", [5], (128, 16, 1), (16, 16, 1), need_reshape=True),
