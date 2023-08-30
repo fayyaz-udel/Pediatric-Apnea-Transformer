@@ -79,9 +79,9 @@ def create_decoder_2d(modality_str, input_shape=(16, 16, 1), num_heads=4, transf
     ##########################################################################
     else:
         x = tf.expand_dims(representation, -1)
-        x = layers.Conv2DTranspose(32, (2, 2), strides=(2,1), padding='same', activation='relu', name=n + "_l10")(x)
-        x = layers.Conv2DTranspose(8, (4, 2), strides=(2,1), padding='same', activation='relu', name=n + "_l11")(x)
-        outputs = layers.Conv2DTranspose(output_shape[-1], (8, 2), strides=(2,1), padding='same', activation='sigmoid', name=n + "_l13")(x)
+        x = layers.Conv2DTranspose(32, (4, 4), strides=(2,1), padding='same', activation='relu', name=n + "_l10")(x)
+        x = layers.Conv2DTranspose(8, (8, 4), strides=(2,1), padding='same', activation='relu', name=n + "_l11")(x)
+        outputs = layers.Conv2DTranspose(output_shape[-1], (16, 4), strides=(2,1), padding='same', activation='sigmoid', name=n + "_l13")(x)
 
 
     model = keras.Model(inputs=inputs, outputs=outputs, name=n)
