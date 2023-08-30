@@ -115,7 +115,7 @@ def generate_loss_weights(m_list):
     return loss_weights
 
 
-def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio):
+def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance):
     ###########   Miss Some Data     ##############################
     if miss_ratio > 0:
         for i in range(x_test.shape[0]):
@@ -124,7 +124,7 @@ def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio):
                     x_test[i, :, j] = np.zeros_like(x_test[i, :, j])
     ###########   ADD Some Noise     ##############################
     elif noise_ratio > 0:
-        add_noise_to_data(x_test, noise_ratio)
+        add_noise_to_data(x_test, noise_ratio, noise_chance)
     ###############################################################
     ###############################################################
     for m in m_list:
@@ -165,10 +165,13 @@ def add_noise_to_signal(signal, target_snr_db=20):
     return signal + y_noise
 
 
-def add_noise_to_data(data, target_snr_db=20):
+def add_noise_to_data(data, target_snr_db, noise_chance):
     for sample in range(data.shape[0]):
         for channel in range(data.shape[2]):
-            data[sample, :, channel] = add_noise_to_signal(data[sample, :, channel], target_snr_db)
+            if random.random() < noise_chance:
+                data[sample, :, channel] = add_noise_to_signal(data[sample, :, channel], target_snr_db)
+            else:
+                data[sample, :, channel] = data[sample, :, channel]
     return data
 ########################################################################################################################
 

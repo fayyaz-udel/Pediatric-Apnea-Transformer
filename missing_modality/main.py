@@ -1,4 +1,5 @@
 import gc
+from datetime import datetime
 
 import keras
 from keras.callbacks import EarlyStopping
@@ -8,13 +9,15 @@ from missing_modality.modality import *
 from missing_modality.model import create_unimodal_model, create_multimodal_model
 
 PHASE = "multimodal"  # unimodal, multimodal
-DATA_PATH = "/home/hamedcan/d/nch_30x64_"
+# DATA_PATH = "/home/hamedcan/d/nch_30x64_"
+DATA_PATH = "/media/hamed/NSSR Dataset/nch_30x64_test_"
+
 EPOCHS = 100
 BATCH_SIZE = 256
 MODALS = ["eog", "eeg", "resp", "spo2", "ecg", "co2"]
-NOISE_RATIO = 0
-MISS_RATIO = 0
-
+NOISE_RATIO = 0.10
+MISS_RATIO = 0.0
+NOISE_CHANCE = 0.50
 FOLDS = 1
 TRAIN = False
 
@@ -41,7 +44,7 @@ for fold in range(FOLDS):
         del data
     ######################################################################
     ######################################################################
-    load_data(m_list, x_train, x_test, MISS_RATIO, NOISE_RATIO)
+    load_data(m_list, x_train, x_test, MISS_RATIO, NOISE_RATIO, NOISE_CHANCE)
     gc.collect()
     keras.backend.clear_session()
     early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
@@ -75,4 +78,4 @@ for fold in range(FOLDS):
 
 if not TRAIN:
     result.print()
-    result.save("./result/" + "test" + ".txt", str(MODALS) + str(DEL_MODALS) + str(NOISE_MODALS))
+    result.save("./result/" + "test" + ".txt", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
