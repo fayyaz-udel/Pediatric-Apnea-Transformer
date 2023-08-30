@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 from scipy import signal
 
@@ -104,6 +106,7 @@ def generate_loss(m_list, dec_loss='mae', cls_loss='binary_crossentropy'):
         loss[m.name + '_cls'] = cls_loss
     return loss
 
+
 def generate_loss_weights(m_list):
     loss_weights = {}
     for m in m_list:
@@ -112,17 +115,19 @@ def generate_loss_weights(m_list):
     return loss_weights
 
 
-def load_data(m_list, x_train, x_test, miss_modal=[], noise_modal={}):
+def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio):
+    ###########   Miss Some Data     ##############################
+    if miss_ratio > 0:
+        for i in range(x_test.shape[0]):
+            for j in range(x_test.shape[2]):
+                if random.random() < miss_ratio:
+                    x_test[i, :, j] = np.zeros_like(x_test[i, :, j])
+    ###########   ADD Some Noise     ##############################
+    elif noise_ratio > 0:
+        add_noise_to_data(x_test, noise_ratio)
+    ###############################################################
+    ###############################################################
     for m in m_list:
-        ################  missing modality  #######################
-        if m.name in miss_modal:
-            x_train[:, :, m.index] = np.zeros_like(x_train[:, :, m.index])
-            x_test[:, :, m.index] = np.zeros_like(x_test[:, :, m.index])
-        ################  noisy modality   ########################
-        elif m.name in list(noise_modal.keys()):
-            x_train[:, :, m.index] = add_noise_to_data(x_train[:, :, m.index], target_snr_db=noise_modal[m.name])
-            x_test[:, :, m.index] = add_noise_to_data(x_test[:, :, m.index], target_snr_db=noise_modal[m.name])
-        ###########################################################
         if m.need_freq:
             m.x_train = transform2freq(x_train, m.index)
             m.x_test = transform2freq(x_test, m.index)
@@ -132,7 +137,7 @@ def load_data(m_list, x_train, x_test, miss_modal=[], noise_modal={}):
         else:
             m.x_train = x_train[:, :, m.index]
             m.x_test = x_test[:, :, m.index]
-        ###########################################################
+
         ###########################################################
         m.x_train = normalize(m.x_train)
         m.x_test = normalize(m.x_test)
@@ -156,16 +161,15 @@ def add_noise_to_signal(signal, target_snr_db=20):
     # Calculate noise according to [2] then convert to watts
     noise_avg_db = sig_avg_db - target_snr_db
     noise_avg_watts = 10 ** (noise_avg_db / 10)
-    y_noise = np.random.normal(0, np.sqrt(noise_avg_watts), (len(signal_watts), 1))
+    y_noise = np.random.normal(0, np.sqrt(noise_avg_watts), (len(signal_watts)))
     return signal + y_noise
 
 
 def add_noise_to_data(data, target_snr_db=20):
     for sample in range(data.shape[0]):
-        data[sample, :, :] = add_noise_to_signal(data[sample, :, :], target_snr_db)
+        for channel in range(data.shape[2]):
+            data[sample, :, channel] = add_noise_to_signal(data[sample, :, channel], target_snr_db)
     return data
-
-
 ########################################################################################################################
 
 # def get_augmentation_model():
