@@ -8,15 +8,15 @@ from missing_modality.modality import *
 from missing_modality.model import create_unimodal_model, create_multimodal_model
 
 PHASE = "multimodal"  # unimodal, multimodal
-DATA_PATH = "/media/hamed/NSSR Dataset/nch_30x64_"
+DATA_PATH = "/home/hamedcan/d/nch_30x64_"
 EPOCHS = 100
 BATCH_SIZE = 256
-MODALS = ["eeg", "resp", "spo2", "ecg", "co2"]
+MODALS = ["eog", "eeg", "resp", "spo2", "ecg", "co2"]
 DEL_MODALS = []
 NOISE_MODALS = {}
 
 FOLDS = 1
-TRAIN = True
+TRAIN = False
 
 result = Result()
 ### DATASET ###
@@ -44,7 +44,7 @@ for fold in range(FOLDS):
     load_data(m_list, x_train, x_test, miss_modal=DEL_MODALS, noise_modal=NOISE_MODALS)  # , noise_modal={"eeg": 0.2}
     gc.collect()
     keras.backend.clear_session()
-    early_stopper = EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True)
+    early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     if PHASE == "unimodal":
         if TRAIN:
             model = create_unimodal_model(m_list)
