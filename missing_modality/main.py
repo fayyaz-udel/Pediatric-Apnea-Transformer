@@ -10,7 +10,7 @@ from missing_modality.model import create_unimodal_model, create_multimodal_mode
 
 config = {
 
-    "PHASE": "unimodal",  # unimodal, multimodal
+    "PHASE": "multimodal",  # unimodal, multimodal
     "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
     # "DATA_PATH" = "/media/hamed/NSSR Dataset/nch_30x64_test_"
 
@@ -21,7 +21,7 @@ config = {
     "MISS_RATIO": 0.00,
     "NOISE_CHANCE": 0.0,
     "FOLDS": 1,
-    "TRAIN": True,
+    "TRAIN": False,
 }
 
 
