@@ -69,7 +69,7 @@ def create_multimodal_model(m_list):
 if __name__ == "__main__":
     MODALS = ["eeg", "resp", "spo2", "ecg", "co2"]
 
-    m_list = generate_modalities(MODALS)
-    model = create_unimodal_model(m_list)
+    # m_list = generate_modalities(MODALS)
+    # model = create_unimodal_model(m_list)
+    model = create_decoder_2d('eeg', output_shape=(128, 16, 1))
     model.summary()
-    print("done")
