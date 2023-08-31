@@ -13,7 +13,7 @@ def create_fusion_network(m_list):
         m.f_enc_flat = layers.Flatten()(m.f_enc)
         m.f_a_s = keras.Input(input_shape_a_s)
 
-    x = layers.Concatenate()(get_f_enc_flats(m_list)) # + get_f_a_s(m_list))
+    x = layers.Concatenate()(get_f_enc_flats(m_list))  # + get_f_a_s(m_list))
 
     # m1 = input[:, :, 0]
     # m2 = input[:, :, 1]
@@ -65,6 +65,7 @@ def create_multimodal_model(m_list):
     ### FUSION NETWORK ###
     label = create_fusion_network(m_list)(get_encs(m_list) + get_a_s(m_list))
     return keras.Model(get_inps(m_list), label, name='multimodal_model')
+
 
 if __name__ == "__main__":
     MODALS = ["eeg", "resp", "spo2", "ecg", "co2"]

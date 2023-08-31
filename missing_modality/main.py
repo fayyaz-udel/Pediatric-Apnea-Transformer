@@ -77,13 +77,12 @@ def train(config):
                 result.add(y_test, y_predict, predict)
 
 
-
         else:
             raise Exception("Invalid phase: " + config["PHASE"])
 
     if not config["TRAIN"]:
         result.print()
-        result.save("./result/" + "test" + ".txt", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+        result.save("./result/" + "test_" + config["MODEL_NAME"] + ".txt", config)
 
 
 if __name__ == "__main__":
