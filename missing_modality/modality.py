@@ -22,6 +22,8 @@ class Modality:
         self.f_enc = None
         self.f_enc_flat = None
         self.f_a_s = None
+        self.f_h = None
+        self.f_z = None
         ### data ###
         self.x_train = None
         self.x_test = None
@@ -84,6 +86,12 @@ def get_f_a_s(ms):
         f_a_s.append(m.f_a_s)
     return f_a_s
 
+
+def get_f_enc_flats(ms):
+    f_enc_flat = []
+    for m in ms:
+        f_enc_flat.append(m.f_enc_flat)
+    return f_enc_flat
 
 def get_x_train(ms):
     x_train = []
