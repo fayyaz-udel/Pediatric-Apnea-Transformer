@@ -25,7 +25,8 @@ def create_fusion_network(m_list, HIDDEN_STATE_DIM=16):
         else:
             h = tf.add(h, tf.multiply(m.f_z, m.f_h))
 
-    label = layers.Dense(1, activation='sigmoid')(h)
+    h_flat = layers.Flatten()(h)
+    label = layers.Dense(1, activation='sigmoid')(h_flat)
     return keras.Model(get_f_encs(m_list) + get_f_a_s(m_list), label, name='fusion')
 
 
@@ -67,8 +68,9 @@ def create_multimodal_model(m_list):
 
 
 if __name__ == "__main__":
-    MODALS = ["eeg", "co2", "resp", "ecg"]
+    MODALS = ["eog", "eeg", "resp", "spo2", "ecg", "co2"]
 
     m_list = generate_modalities(MODALS)
     model = create_multimodal_model(m_list)
+    # model = create_fusion_network(m_list)
     model.summary()
