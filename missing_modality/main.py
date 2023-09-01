@@ -22,7 +22,7 @@ config = {
     "MISS_RATIO": 0.00,
     "NOISE_CHANCE": 0.0,
     "FOLDS": 1,
-    "TRAIN": False,
+    "TRAIN": True,
 }
 
 
