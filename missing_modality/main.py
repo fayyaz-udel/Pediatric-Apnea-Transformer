@@ -11,8 +11,8 @@ from missing_modality.model import create_unimodal_model, create_multimodal_mode
 config = {
 
     "PHASE": "multimodal",  # unimodal, multimodal
-    "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
-    # "DATA_PATH" = "/media/hamed/NSSR Dataset/nch_30x64_test_"
+    # "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
+    "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_test_",
 
     "EPOCHS": 100,
     "BATCH_SIZE": 256,
@@ -66,7 +66,7 @@ def train(config):
             model = create_multimodal_model(m_list)
             if config["TRAIN"]:
                 model.compile(optimizer='adam', loss='binary_crossentropy', metrics='acc')
-                model.load_weights('./weights/uniweights_' + str(fold) + '.h5', by_name=True, skip_mismatch=True)
+                # model.load_weights('./weights/uniweights_' + str(fold) + '.h5', by_name=True, skip_mismatch=True)
                 history = model.fit(x=get_x_train(m_list), y=y_train, validation_split=0.1,
                                     epochs=config["EPOCHS"], batch_size=config["BATCH_SIZE"], callbacks=[early_stopper])
                 model.save_weights('./weights/mulweights_f' + str(fold) + '.h5')

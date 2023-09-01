@@ -9,23 +9,23 @@ from missing_modality.model_2d import create_decoder_2d, create_encoder_2d
 def create_fusion_network(m_list, HIDDEN_STATE_DIM=16):
     input_shape_a_s = 1
     for m in m_list:
-        m.f_enc = keras.Input(m.z_dim)
-        m.f_enc_flat = layers.Flatten()(m.f_enc)
-        m.f_a_s = keras.Input(input_shape_a_s)
-        m.f_h = layers.Dense(HIDDEN_STATE_DIM, activation=tf.nn.tanh)(m.f_enc_flat)
+        m.f_enc = keras.Input(m.z_dim, name=m.name + '_f_z_inp')
+        m.f_enc_flat = layers.Flatten(name=m.name + '_f_enc_flat')(m.f_enc)
+        m.f_a_s = keras.Input(input_shape_a_s,name=m.name + '_f_q_inp')
+        m.f_h = layers.Dense(HIDDEN_STATE_DIM, activation=tf.nn.tanh, name=m.name + '_f_h')(m.f_enc_flat)
 
     First = True
-    z_stack = tf.stack(get_f_enc_flats(m_list), axis=1)
+    z_stack = tf.concat(get_f_enc_flats(m_list), 1, name='z_stack')
     for m in m_list:
-        m.f_z = layers.Dense(HIDDEN_STATE_DIM, activation='sigmoid')(z_stack)
-        m.f_zh = layers.Multiply()([m.f_z, m.f_h])
+        m.f_z = layers.Dense(HIDDEN_STATE_DIM, activation='sigmoid', name=m.name + "_z")(z_stack)
+        m.f_zh = layers.Multiply(name=m.name + "_zh")([m.f_z, m.f_h])
 
     for m in m_list:
         if First:
             h = m.f_zh
             First = False
         else:
-            h = layers.Add()([h, m.f_zh])
+            h = layers.Add(name=m.name + "_add")([h, m.f_zh])
     h_flat = layers.Flatten()(h)
     label = layers.Dense(1, activation='sigmoid')(h_flat)
     return keras.Model(get_f_encs(m_list) + get_f_a_s(m_list), label, name='fusion')
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     MODALS = ["eog", "eeg", "resp", "spo2", "ecg", "co2"]
 
     m_list = generate_modalities(MODALS)
-    model = create_multimodal_model(m_list)
     model = create_fusion_network(m_list)
     model.summary()
+    keras.utils.plot_model(model, 'model.png', show_shapes=True)
 
