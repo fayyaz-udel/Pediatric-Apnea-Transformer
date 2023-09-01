@@ -12,12 +12,14 @@ def create_fusion_network(m_list, HIDDEN_STATE_DIM=16):
         m.f_enc = keras.Input(m.z_dim, name=m.name + '_f_z_inp')
         m.f_enc_flat = layers.Flatten(name=m.name + '_f_enc_flat')(m.f_enc)
         m.f_a_s = keras.Input(input_shape_a_s,name=m.name + '_f_q_inp')
-        m.f_h = layers.Dense(HIDDEN_STATE_DIM, activation=tf.nn.tanh, name=m.name + '_f_h')(m.f_enc_flat)
+        m.f_hd = layers.Dense(HIDDEN_STATE_DIM, activation=tf.nn.tanh, name=m.name + '_f_h')(m.f_enc_flat)
+        m.f_h = layers.Dropout(rate=0.05)(m.f_hd)
 
     First = True
     z_stack = tf.concat(get_f_enc_flats(m_list), 1, name='z_stack')
     for m in m_list:
-        m.f_z = layers.Dense(HIDDEN_STATE_DIM, activation='sigmoid', name=m.name + "_z")(z_stack)
+        m.f_zd = layers.Dense(HIDDEN_STATE_DIM, activation='sigmoid', name=m.name + "_z")(z_stack)
+        m.f_z = layers.Dropout(rate=0.05)(m.f_zd)
         m.f_zh = layers.Multiply(name=m.name + "_zh")([m.f_z, m.f_h])
 
     for m in m_list:
