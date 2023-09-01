@@ -1,12 +1,12 @@
-from missing_modality.main import train
-
-MODEL_NAME = "QAF"
+from missing_modality.train import train
+from missing_modality.train_baseline import train_baseline
 
 if __name__ == "__main__":
     config = {
+        "MODEL_NAME": "cnn",
         "PHASE": "multimodal",  # unimodal, multimodal
-        "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
-        # "DATA_PATH" = "/media/hamed/NSSR Dataset/nch_30x64_test_"
+        # "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
+        "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_test_",
         "EPOCHS": 100,
         "BATCH_SIZE": 256,
         "MODALS": ["eog", "eeg", "resp", "spo2", "ecg", "co2"],
@@ -18,6 +18,6 @@ if __name__ == "__main__":
     }
 
     for miss_ratio in [0, 0.1, 0.2, 0.3, 0.4, 0.5]:
-        config["MODEL_NAME"] = MODEL_NAME + "_miss_" + str(miss_ratio)
+        config["log_name"] = config["MODEL_NAME"] + "_miss_" + str(miss_ratio)
         config["MISS_RATIO"] = miss_ratio
-        train(config)
+        train_baseline(config)

@@ -2,7 +2,7 @@ from keras import Input, Model
 from keras.activations import relu
 from keras.layers import Dense, Flatten, BatchNormalization, LSTM, Conv1D, MaxPooling1D, Activation, Dropout
 from keras.models import Sequential
-
+import tensorflow_addons as tfa
 from .transformer import create_transformer_model, create_hybrid_transformer_model
 
 
@@ -99,7 +99,7 @@ model_dict = {
 
 
 def get_model(config):
-    if config["model_name"].split('_')[0] == "Transformer":
+    if config["MODEL_NAME"].split('_')[0] == "Transformer":
         return create_transformer_model(input_shape=(60 * 32, len(config["channels"])),
                                         num_patches=config["num_patches"], projection_dim=config["transformer_units"],
                                         transformer_layers=config["transformer_layers"], num_heads=config["num_heads"],
@@ -108,12 +108,12 @@ def get_model(config):
                                         mlp_head_units=[256, 128], num_classes=1, drop_out=config["drop_out_rate"],
                                         reg=config["regression"], l2_weight=config["regularization_weight"])
     else:
-        return model_dict.get(config["model_name"].split('_')[0])
+        return model_dict.get(config["MODEL_NAME"].split('_')[0])
 
 
 if __name__ == "__main__":
     config = {
-        "model_name": "hybrid",
+        "MODEL_NAME": "hybrid",
         "regression": False,
 
         "transformer_layers": 4,  # best 5

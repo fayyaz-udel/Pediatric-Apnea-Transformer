@@ -26,7 +26,7 @@ from scipy.interpolate import splev, splrep
 # Ramp #12
 
 
-SIGS = [0,3, 5, 6, 9, 10, 4]
+SIGS = [0, 3, 5, 6, 9, 10, 4]
 s_count = len(SIGS)
 
 THRESHOLD = 3

@@ -124,40 +124,52 @@ def generate_loss_weights(m_list):
     return loss_weights
 
 
-def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance):
+def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, return_data=False):
     ###########   Miss Some Data     ##############################
     if miss_ratio > 0:
+        print("miss ratio " + str(miss_ratio))
         for i in range(x_test.shape[0]):
             for j in range(x_test.shape[2]):
                 if random.random() < miss_ratio:
                     x_test[i, :, j] = np.zeros_like(x_test[i, :, j])
     ###########   ADD Some Noise     ##############################
     elif noise_ratio > 0:
+        print("noise ratio " + str(noise_ratio))
         add_noise_to_data(x_test, noise_ratio, noise_chance)
     ###############################################################
     ###############################################################
-    for m in m_list:
-        if m.need_freq:
-            m.x_train = transform2freq(x_train, m.index)
-            m.x_test = transform2freq(x_test, m.index)
-        elif m.need_reshape:
-            m.x_train = resize(x_train, m.index)
-            m.x_test = resize(x_test, m.index)
-        else:
-            m.x_train = x_train[:, :, m.index]
-            m.x_test = x_test[:, :, m.index]
+    if return_data:
+        return normalize(x_train), normalize(x_test)
+    else:
+        for m in m_list:
+            if m.need_freq:
+                m.x_train = transform2freq(x_train, m.index)
+                m.x_test = transform2freq(x_test, m.index)
+            elif m.need_reshape:
+                m.x_train = resize(x_train, m.index)
+                m.x_test = resize(x_test, m.index)
+            else:
+                m.x_train = x_train[:, :, m.index]
+                m.x_test = x_test[:, :, m.index]
 
-        ###########################################################
-        m.x_train = normalize(m.x_train)
-        m.x_test = normalize(m.x_test)
+            ###########################################################
+            m.x_train = normalize(m.x_train)
+            m.x_test = normalize(m.x_test)
 
 
 def normalize(xx):
-    for i in range(xx.shape[-1]):
-        x = xx[:, :, :, i]
-        x = np.clip(x, np.percentile(x, 0.1), np.percentile(x, 99.9))
-        x = (x - np.min(x)) / (np.max(x) - np.min(x))
-        xx[:, :, :, i] = x
+    if len(xx.shape) == 4:
+        for i in range(xx.shape[-1]):
+            x = xx[:, :, :, i]
+            x = np.clip(x, np.percentile(x, 0.1), np.percentile(x, 99.9))
+            x = (x - np.min(x)) / (np.max(x) - np.min(x))
+            xx[:, :, :, i] = x
+    else:
+        for i in range(xx.shape[-1]):
+            x = xx[:, :, i]
+            x = np.clip(x, np.percentile(x, 0.1), np.percentile(x, 99.9))
+            x = (x - np.min(x)) / (np.max(x) - np.min(x))
+            xx[:, :, i] = x
     return xx
 
 
