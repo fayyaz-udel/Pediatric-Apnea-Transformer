@@ -24,6 +24,7 @@ class Modality:
         self.f_a_s = None
         self.f_h = None
         self.f_z = None
+        self.f_zh = None
         ### data ###
         self.x_train = None
         self.x_test = None

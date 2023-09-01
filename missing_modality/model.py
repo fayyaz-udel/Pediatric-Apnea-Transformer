@@ -16,15 +16,16 @@ def create_fusion_network(m_list, HIDDEN_STATE_DIM=16):
 
     First = True
     z_stack = tf.stack(get_f_enc_flats(m_list), axis=1)
+    for m in m_list:
+        m.f_z = layers.Dense(HIDDEN_STATE_DIM, activation='sigmoid')(z_stack)
+        m.f_zh = layers.Multiply()([m.f_z, m.f_h])
 
     for m in m_list:
-        m.f_z = layers.Dense(HIDDEN_STATE_DIM, activation=tf.nn.sigmoid)(z_stack)
         if First:
-            h = tf.multiply(m.f_z, m.f_h)
+            h = m.f_zh
             First = False
         else:
-            h = tf.add(h, tf.multiply(m.f_z, m.f_h))
-
+            h = layers.Add()([h, m.f_zh])
     h_flat = layers.Flatten()(h)
     label = layers.Dense(1, activation='sigmoid')(h_flat)
     return keras.Model(get_f_encs(m_list) + get_f_a_s(m_list), label, name='fusion')
@@ -72,5 +73,6 @@ if __name__ == "__main__":
 
     m_list = generate_modalities(MODALS)
     model = create_multimodal_model(m_list)
-    # model = create_fusion_network(m_list)
+    model = create_fusion_network(m_list)
     model.summary()
+
