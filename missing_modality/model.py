@@ -57,8 +57,8 @@ def create_unimodal_model(m_list):
 def create_multimodal_model(m_list):
     for m in m_list:
         m.inp = keras.Input(m.inp_dim, name=m.name + '_inp')
-        m.enc = create_encoder_2d(m.name, m.inp_dim, trainable=False)(m.inp)
-        m.dec = create_decoder_2d(m.name, m.z_dim, output_shape=m.inp_dim, trainable=False)(m.enc)
+        m.enc = create_encoder_2d(m.name, m.inp_dim, trainable=True)(m.inp)
+        m.dec = create_decoder_2d(m.name, m.z_dim, output_shape=m.inp_dim, trainable=True)(m.enc)
 
         m.inp_flat = layers.Flatten()(m.inp)
         m.dec_flat = layers.Flatten()(m.dec)
