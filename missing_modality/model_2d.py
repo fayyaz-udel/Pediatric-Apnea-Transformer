@@ -49,7 +49,7 @@ class PatchEncoder(layers.Layer):
 
 
 def create_decoder_2d(modality_str, input_shape=(16, 16, 1), num_heads=4, transformer_layers=3, projection_dim=16,
-                      image_size=16, patch_size=4, output_shape=(128, 16, 1), cnn=True):
+                      image_size=16, patch_size=4, output_shape=(128, 16, 1), cnn=True, trainable=True):
     n = modality_str + "_dec"
     transformer_units = [projection_dim * 2, projection_dim, ]
     num_patches = (image_size // patch_size) ** 2
@@ -84,13 +84,13 @@ def create_decoder_2d(modality_str, input_shape=(16, 16, 1), num_heads=4, transf
         outputs = layers.Conv2DTranspose(output_shape[-1], (16, 4), strides=(2,1), padding='same', activation='sigmoid', name=n + "_l13")(x)
 
 
-    model = keras.Model(inputs=inputs, outputs=outputs, name=n)
+    model = keras.Model(inputs=inputs, outputs=outputs, name=n, trainable=trainable)
     return model
 
 
 def create_encoder_2d(modality_str, input_shape=(128, 16, 1), num_heads=4, transformer_layers=3, projection_dim=16,
                       image_size=64,
-                      patch_size=16, train=False):
+                      patch_size=16, trainable=True):
     n = modality_str + "_enc"
     transformer_units = [projection_dim * 2, projection_dim, ]
     num_patches = (image_size // patch_size) ** 2
@@ -113,4 +113,4 @@ def create_encoder_2d(modality_str, input_shape=(128, 16, 1), num_heads=4, trans
 
     representation = layers.LayerNormalization(epsilon=1e-6, name=n + "_l9")(encoded_patches)
     representation = tf.expand_dims(representation, -1)
-    return keras.Model(inputs=inputs, outputs=representation, name=n)
+    return keras.Model(inputs=inputs, outputs=representation, name=n, trainable=trainable)
