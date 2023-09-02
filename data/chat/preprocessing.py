@@ -11,9 +11,9 @@ from mne import make_fixed_length_events
 THRESHOLD = 3
 NUM_WORKER = 1
 SN = 3984  # STUDY NUMBER
-FREQ = 128.0
+FREQ = 64.0
 EPOCH_LENGTH = 30.0
-OUT_FOLDER = 'E:\\data_chat_baseline_30x128_test'
+OUT_FOLDER = '/media/hamed/CHAT Dataset/chat_b_30x64/'
 
 channels = [
     'E1',  # 0
@@ -215,7 +215,7 @@ def preprocess(path, annotation_modifier, out_dir):
 
 
 if __name__ == "__main__":
-    root = "E:\\chat\\polysomnography\\edfs\\baseline_test\\"
+    root = "/media/hamed/CHAT Dataset/chat/polysomnography/edfs/baseline/"
     for edf_file in glob.glob(root + "*.edf"):
         annot_file = edf_file.replace(".edf", "-nsrr.tsv")
 
