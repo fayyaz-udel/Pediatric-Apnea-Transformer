@@ -91,9 +91,9 @@ def create_semscnn_model(input_a_shape):
 
 model_dict = {
 
-    "cnn": create_cnn_model((60 * 32, 3)),
-    "sem-mscnn": create_semscnn_model((60 * 32, 3)),
-    "cnn-lstm": create_cnnlstm_model((60 * 32, 3)),
+    "cnn": create_cnn_model((60 * 32, 7)),
+    "sem-mscnn": create_semscnn_model((60 * 32, 7)),
+    "cnn-lstm": create_cnnlstm_model((60 * 32, 7)),
     "hybrid": create_hybrid_transformer_model((60 * 32, 3)),
 }
 
@@ -106,7 +106,7 @@ def get_model(config):
                                         transformer_units=[config["transformer_units"] * 2,
                                                            config["transformer_units"]],
                                         mlp_head_units=[256, 128], num_classes=1, drop_out=config["drop_out_rate"],
-                                        reg=config["regression"], l2_weight=config["regularization_weight"])
+                                        reg=False, l2_weight=config["regularization_weight"])
     else:
         return model_dict.get(config["MODEL_NAME"].split('_')[0])
 

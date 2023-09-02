@@ -11,7 +11,7 @@ from missing_modality.model import create_unimodal_model, create_multimodal_mode
 from models.models import get_model
 
 config = {
-    "MODEL_NAME": "cnn",
+    "MODEL_NAME": "Transformer",
     "PHASE": "multimodal",  # unimodal, multimodal
     # "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
     "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_",
@@ -24,10 +24,19 @@ config = {
     "NOISE_CHANCE": 0.0,
     "FOLDS": 1,
     "TRAIN": True,
+    ########################################################
+    "transformer_layers": 5,  # best 5
+    "drop_out_rate": 0.25,  # best 0.25
+    "num_patches": 30,  # best 30 TBD
+    "transformer_units": 32,  # best 32
+    "regularization_weight": 0.001,  # best 0.001
+    "num_heads": 4,
+    "epochs": 100,  # best 200
+    "channels": [0, 3, 5, 6, 9, 10, 4],
 }
 
 
-def train_baseline(config):
+def  train_baseline(config):
     result = Result()
     ### DATASET ###
     for fold in range(config["FOLDS"]):
@@ -35,7 +44,7 @@ def train_baseline(config):
         #####################################################################
         first = True
         for i in range(5):
-            # print('f' + str(i))
+            print('f' + str(i))
             data = np.load(config["DATA_PATH"] + str(i) + ".npz", allow_pickle=True)
             if i != fold:
                 if first:
@@ -56,7 +65,7 @@ def train_baseline(config):
         gc.collect()
         keras.backend.clear_session()
         model = get_model(config)
-        model.build((None, 1920, 9))
+        model.build((None, 1920, 7))
         model.compile(optimizer="adam", loss=BinaryCrossentropy(), metrics=[keras.metrics.Precision(), keras.metrics.Recall()])
 
         if config["TRAIN"]:

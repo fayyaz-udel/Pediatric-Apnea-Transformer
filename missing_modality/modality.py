@@ -94,6 +94,7 @@ def get_f_enc_flats(ms):
         f_enc_flat.append(m.f_enc_flat)
     return f_enc_flat
 
+
 def get_x_train(ms):
     x_train = []
     for m in ms:
@@ -139,6 +140,9 @@ def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, re
     ###############################################################
     ###############################################################
     if return_data:
+        x_train = x_train[:, :, [0, 1, 3, 4, 5, 7, 8]]
+        x_test = x_test[:, :, [0, 1, 3, 4, 5, 7, 8]]
+
         return normalize(x_train), normalize(x_test)
     else:
         for m in m_list:
@@ -194,6 +198,8 @@ def add_noise_to_data(data, target_snr_db, noise_chance):
             else:
                 data[sample, :, channel] = data[sample, :, channel]
     return data
+
+
 ########################################################################################################################
 
 # def get_augmentation_model():
