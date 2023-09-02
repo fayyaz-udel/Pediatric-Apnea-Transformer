@@ -92,6 +92,7 @@ def get_f_enc_flats(ms):
     f_enc_flat = []
     for m in ms:
         f_enc_flat.append(m.f_enc_flat)
+        # f_enc_flat.append(m.f_a_s)
     return f_enc_flat
 
 

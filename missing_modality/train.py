@@ -11,8 +11,8 @@ from missing_modality.model import create_unimodal_model, create_multimodal_mode
 config = {
 
     "PHASE": "multimodal",  # unimodal, multimodal
-    # "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
-    "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_test_",
+    "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
+    # "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_test_",
     "log_name": datetime.now().strftime("%Y%m%d-%H%M%S"),
     "EPOCHS": 100,
     "BATCH_SIZE": 256,
