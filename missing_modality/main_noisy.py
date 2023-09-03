@@ -1,13 +1,12 @@
 from missing_modality.train import train
-from missing_modality.train_baseline import train_baseline
 
 if __name__ == "__main__":
     config = {
         "MODEL_NAME": "Transformer",
-        "DATA_NAME": "chat",
+        "DATA_NAME": "nch",
         "PHASE": "multimodal",  # unimodal, multimodal
-        # "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
-        "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_test_",
+        "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
+        # "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_test_",
         "EPOCHS": 100,
         "BATCH_SIZE": 256,
         "MODALS": ["eog", "eeg", "resp", "spo2", "ecg", "co2"],
