@@ -69,9 +69,9 @@ def train(config):
                 model.load_weights('./weights/uniweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5', by_name=True, skip_mismatch=True)
                 history = model.fit(x=get_x_train(m_list), y=y_train, validation_split=0.1,
                                     epochs=config["EPOCHS"], batch_size=config["BATCH_SIZE"], callbacks=[early_stopper])
-                model.save_weights('./weights/mulweights_f' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
+                model.save_weights('./weights/mulweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
             else:
-                model.load_weights('./weights/mulweights_f' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
+                model.load_weights('./weights/mulweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
                 predict = model.predict(get_x_test(m_list))
                 y_predict = np.where(predict > 0.5, 1, 0)
                 result.add(y_test, y_predict, predict)

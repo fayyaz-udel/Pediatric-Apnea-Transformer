@@ -7,7 +7,7 @@ if __name__ == "__main__":
         "DATA_NAME": "chat",
         "PHASE": "multimodal",  # unimodal, multimodal
         # "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
-        "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_",
+        "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_test_",
         "EPOCHS": 100,
         "BATCH_SIZE": 256,
         "MODALS": ["eog", "eeg", "resp", "spo2", "ecg", "co2"],

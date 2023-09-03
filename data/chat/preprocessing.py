@@ -11,7 +11,7 @@ from mne import make_fixed_length_events
 THRESHOLD = 3
 NUM_WORKER = 1
 SN = 3984  # STUDY NUMBER
-FREQ = 64.0
+FREQ = 128.0
 EPOCH_LENGTH = 30.0
 OUT_FOLDER = '/media/hamed/CHAT Dataset/chat_b_30x64/'
 
@@ -159,7 +159,7 @@ def preprocess(path, annotation_modifier, out_dir):
     total_apnea_event_second = 0
     total_hypopnea_event_second = 0
 
-    for seq in range(data.inp_dim[0]):
+    for seq in range(data.shape[0]):
         epoch_set = set(range(starts[seq], starts[seq] + int(EPOCH_LENGTH)))
         if is_apnea_available:
             apnea_seconds = len(apnea_events_set.intersection(epoch_set))
@@ -183,7 +183,7 @@ def preprocess(path, annotation_modifier, out_dir):
     ####################################################################################################################
 
     new_data = np.zeros_like(data)
-    for i in range(data.inp_dim[0]):
+    for i in range(data.shape[0]):
 
         new_data[i, 0, :] = data[i, 0, :] - data[i, 7, :]  # E1 - M2
         new_data[i, 1, :] = data[i, 1, :] - data[i, 6, :]  # E2 - M1
@@ -207,11 +207,11 @@ def preprocess(path, annotation_modifier, out_dir):
     ####################################################################################################################
 
     np.savez_compressed(
-        out_dir + '\\' + os.path.basename(path[0]) + "_" + str(total_apnea_event_second) + "_" + str(
+        out_dir + '/' + os.path.basename(path[0]) + "_" + str(total_apnea_event_second) + "_" + str(
             total_hypopnea_event_second),
         data=data, labels_apnea=labels_apnea, labels_hypopnea=labels_hypopnea)
 
-    return data.inp_dim[0]
+    return data.shape[0]
 
 
 if __name__ == "__main__":
