@@ -135,7 +135,7 @@ def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, re
                 if random.random() < miss_ratio:
                     x_test[i, :, j] = np.zeros_like(x_test[i, :, j])
     ###########   ADD Some Noise     ##############################
-    elif noise_ratio > 0:
+    if noise_ratio > 0:
         print("noise ratio " + str(noise_ratio))
         add_noise_to_data(x_test, noise_ratio, noise_chance)
     ###############################################################
