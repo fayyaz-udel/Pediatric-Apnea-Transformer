@@ -4,6 +4,7 @@ from missing_modality.train_baseline import train_baseline
 if __name__ == "__main__":
     config = {
         "MODEL_NAME": "Transformer",
+        "DATA_NAME": "chat",
         "PHASE": "multimodal",  # unimodal, multimodal
         # "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
         "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_",
@@ -28,4 +29,4 @@ if __name__ == "__main__":
     for noise_ratio in [10, 20, 30, 40, 50]:
         config["log_name"] = config["MODEL_NAME"] + "_noisy_" + str(noise_ratio)
         config["NOISE_RATIO"] = noise_ratio
-        train_baseline(config)
+        train(config)

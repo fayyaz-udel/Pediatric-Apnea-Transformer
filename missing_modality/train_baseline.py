@@ -3,7 +3,7 @@ from datetime import datetime
 
 import keras
 from keras.callbacks import EarlyStopping
-from keras.src.losses import BinaryCrossentropy
+from keras.losses import BinaryCrossentropy
 
 from metrics import Result
 from missing_modality.modality import *

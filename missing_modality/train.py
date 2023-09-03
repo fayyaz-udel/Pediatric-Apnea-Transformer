@@ -60,18 +60,18 @@ def train(config):
                 history = model.fit(x=get_x_train(m_list), y=get_x_train(m_list) + [y_train] * len(m_list),
                                     validation_split=0.1, epochs=config["EPOCHS"], batch_size=config["BATCH_SIZE"],
                                     callbacks=[early_stopper])
-                model.save_weights('./weights/uniweights_' + str(fold) + '.h5')
+                model.save_weights('./weights/uniweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
 
         elif config["PHASE"] == "multimodal":
             model = create_multimodal_model(m_list)
             if config["TRAIN"]:
                 model.compile(optimizer='adam', loss='binary_crossentropy', metrics='acc')
-                # model.load_weights('./weights/uniweights_' + str(fold) + '.h5', by_name=True, skip_mismatch=True)
+                model.load_weights('./weights/uniweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5', by_name=True, skip_mismatch=True)
                 history = model.fit(x=get_x_train(m_list), y=y_train, validation_split=0.1,
                                     epochs=config["EPOCHS"], batch_size=config["BATCH_SIZE"], callbacks=[early_stopper])
-                model.save_weights('./weights/mulweights_f' + str(fold) + '.h5')
+                model.save_weights('./weights/mulweights_f' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
             else:
-                model.load_weights('./weights/mulweights_f' + str(fold) + '.h5')
+                model.load_weights('./weights/mulweights_f' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
                 predict = model.predict(get_x_test(m_list))
                 y_predict = np.where(predict > 0.5, 1, 0)
                 result.add(y_test, y_predict, predict)
@@ -82,7 +82,7 @@ def train(config):
 
     if not config["TRAIN"]:
         result.print()
-        result.save("./result/" + "test_" + config["log_name"] + ".txt", config)
+        result.save("./result/" + "test_" + config["log_name"] +"_" + config["DATA_NAME"] + ".txt", config)
 
 
 if __name__ == "__main__":
