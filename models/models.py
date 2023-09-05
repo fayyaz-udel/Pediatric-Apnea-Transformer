@@ -9,7 +9,7 @@ from .transformer import create_transformer_model, create_hybrid_transformer_mod
 def create_cnn_model(input_shape):
     model = Sequential()
     for i in range(5): # 10
-        model.add(Conv1D(45, 32, padding='same'))
+        model.add(Conv1D(15, 128, padding='same')) #45
         model.add(BatchNormalization())
         model.add(Activation(relu))
         model.add(MaxPooling1D())

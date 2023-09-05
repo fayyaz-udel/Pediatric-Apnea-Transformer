@@ -32,7 +32,7 @@ def train(config):
         m_list = generate_modalities(config["MODALS"])
         #####################################################################
         first = True
-        for i in range(5):
+        for i in range(2): # TODO 5
             print('f' + str(i))
             data = np.load(config["DATA_PATH"] + str(i) + ".npz", allow_pickle=True)
             if i != fold:

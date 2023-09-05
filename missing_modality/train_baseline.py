@@ -71,10 +71,10 @@ def  train_baseline(config):
         if config["TRAIN"]:
             early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
             model.fit(x=x_train, y=y_train, batch_size=512, epochs=config["EPOCHS"], validation_split=0.1, callbacks=[early_stopper])
-            model.save_weights('./weights/model_' + config["MODEL_NAME"] + "_" + str(fold) + '.h5')
+            model.save_weights('./weights/model_' + config["MODEL_NAME"] + "_" + config["DATA_NAME"] + "_" + str(fold) + '.h5')
 
         else:
-            model.load_weights('./weights/model_' + config["MODEL_NAME"] + "_" + str(fold) + '.h5')
+            model.load_weights('./weights/model_' + config["MODEL_NAME"] + "_" + config["DATA_NAME"] + "_" + str(fold) + '.h5')
             predict = model.predict(x_test)
             y_predict = np.where(predict > 0.5, 1, 0)
             result.add(y_test, y_predict, predict)
