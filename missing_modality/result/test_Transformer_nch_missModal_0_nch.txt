@@ -1,0 +1,17 @@
+{'MODEL_NAME': 'Transformer', 'DATA_NAME': 'nch', 'PHASE': 'multimodal', 'DATA_PATH': '/media/hamed/NSSR Dataset/nch_30x64_', 'EPOCHS': 100, 'BATCH_SIZE': 256, 'MODALS': ['eog', 'eeg', 'resp', 'spo2', 'ecg', 'co2'], 'NOISE_RATIO': 0.0, 'NOISE_CHANCE': 0.0, 'MISS_RATIO': 0.0, 'MISS_INDEX': [0], 'FOLDS': 1, 'TRAIN': False, 'transformer_layers': 5, 'drop_out_rate': 0.25, 'num_patches': 30, 'transformer_units': 32, 'regularization_weight': 0.001, 'num_heads': 4, 'epochs': 100, 'channels': [0, 3, 5, 6, 9, 10, 4], 'log_name': 'Transformer_nch_missModal_0'}
+=========================================================================== 
+[83.62271473802471] 
+[86.11019101247653] 
+[80.00615510874024] 
+[87.20764693919057] 
+[82.94602499335284] 
+[92.28147705334904] 
+[91.1578998985117] 
+Accuracy: 83.62 -+ 0.000 
+Precision: 86.11 -+ 0.000 
+Recall: 80.01 -+ 0.000 
+Specifity: 87.21 -+ 0.000 
+F1: 82.95 -+ 0.000 
+AUROC: 92.28 -+ 0.000 
+AUPRC: 91.16 -+ 0.000 
+$ 83.6 \pm 0.0$& $86.1 \pm 0.0$& $80.0 \pm 0.0$& $82.9 \pm 0.0$& $92.3 \pm 0.0$& 

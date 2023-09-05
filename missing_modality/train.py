@@ -49,7 +49,7 @@ def train(config):
             del data
         ######################################################################
         ######################################################################
-        load_data(m_list, x_train, x_test, config["MISS_RATIO"], config["NOISE_RATIO"], config["NOISE_CHANCE"])
+        load_data(m_list, x_train, x_test, config["MISS_RATIO"], config["NOISE_RATIO"], config["NOISE_CHANCE"], config["MISS_INDEX"])
         gc.collect()
         keras.backend.clear_session()
         early_stopper = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
