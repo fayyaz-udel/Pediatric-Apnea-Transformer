@@ -126,7 +126,7 @@ def generate_loss_weights(m_list):
     return loss_weights
 
 
-def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, return_data=False):
+def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, miss_index, return_data=False):
     ###########   Miss Some Data     ##############################
     if miss_ratio > 0:
         print("miss ratio " + str(miss_ratio))
@@ -134,6 +134,12 @@ def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, re
             for j in range(x_test.shape[2]):
                 if random.random() < miss_ratio:
                     x_test[i, :, j] = np.zeros_like(x_test[i, :, j])
+    ###########   Miss Specific Channels    #######################
+    if miss_index is not None:
+        print("miss channel " + str(miss_index))
+        for i in range(x_test.shape[0]):
+            for j in miss_index:
+                    x_test[i, :, j] = np.ones_like(x_test[i, :, j])
     ###########   ADD Some Noise     ##############################
     if noise_ratio > 0:
         print("noise ratio " + str(noise_ratio))
@@ -213,11 +219,15 @@ def add_noise_to_data(data, target_snr_db, noise_chance):
 
 def transform2freq(x, idx):
     out_x = np.zeros((x.shape[0], 128, 16, 1))
+
     for i in range(x.shape[0]):
-        f, t, Zxx = signal.stft(x[i, :, idx], fs=64, padded=False)
-        Zxx = np.squeeze(Zxx)
-        Zxx = np.abs(Zxx)[:128, :16]
-        out_x[i, :, :, 0] = ((Zxx - np.min(Zxx)) / (np.max(Zxx) - np.min(Zxx)))
+        if np.sum(x[i, :, idx]):
+            f, t, Zxx = signal.stft(x[i, :, idx], fs=64, padded=False)
+            Zxx = np.squeeze(Zxx)
+            Zxx = np.abs(Zxx)[:128, :16]
+            out_x[i, :, :, 0] = ((Zxx - np.min(Zxx)) / (np.max(Zxx) - np.min(Zxx)))
+        else:
+            out_x[i, :, :, 0] = np.zeros((128, 16))
     return np.nan_to_num(out_x)
 
 

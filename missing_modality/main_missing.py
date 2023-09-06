@@ -27,7 +27,7 @@ if __name__ == "__main__":
         "channels": [0, 3, 5, 6, 9, 10, 4],
     }
 
-    for miss_ratio in [0]:#, 0.1, 0.2, 0.3, 0.4, 0.5]:
+    for miss_ratio in [0, 0.1, 0.2, 0.3, 0.4, 0.5]:
         config["log_name"] = config["MODEL_NAME"] + "_" + config["DATA_NAME"] + "_miss_" + str(miss_ratio)
         config["MISS_RATIO"] = miss_ratio
         train_baseline(config)
