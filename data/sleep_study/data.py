@@ -5,9 +5,9 @@ import numpy as np
 from dateutil import parser
 from datetime import timezone
 import pywt
-from scipy import signal, interpolate
+from scipy import interpolate
 
-import sleep_study as ss
+from data import sleep_study as ss
 
 study_list = None # Will be initialized after the module is initialized.
 
@@ -20,7 +20,7 @@ def init_study_list():
 
 def init_age_file():
     new_fn = 'age_file.csv'
-    age_path = os.path.join(ss.data_dir, 'health_data', ss.info.SLEEP_STUDY)
+    age_path = os.path.join(ss.data_dir, 'health_data', data.sleep_study.info.SLEEP_STUDY)
 
     df = pd.read_csv(age_path, sep=',', dtype='str')
     df['FILE_NAME'] = df["STUDY_PAT_ID"].str.cat(df["SLEEP_STUDY_ID"], sep='_')
@@ -39,7 +39,7 @@ def load_study(name, annotation_func, preload=False, exclude=[], verbose='CRITIC
 
     patient_id, study_id = name.split('_')
 
-    tmp = ss.info.SLEEP_STUDY
+    tmp = data.sleep_study.info.SLEEP_STUDY
     date = tmp[(tmp.STUDY_PAT_ID == int(patient_id))
              & (tmp.SLEEP_STUDY_ID == int(study_id))] \
                      .SLEEP_STUDY_START_DATETIME.values[0] \
@@ -64,8 +64,8 @@ def load_study(name, annotation_func, preload=False, exclude=[], verbose='CRITIC
 
     return raw
 
-def get_sleep_eeg_and_stages(name, channels=ss.info.EEG_CH_NAMES, verbose=False, downsample=True):
-    raw = ss.data.load_study(name)
+def get_sleep_eeg_and_stages(name, channels=data.sleep_study.info.EEG_CH_NAMES, verbose=False, downsample=True):
+    raw = data.sleep_study.data.load_study(name)
     
     freq = int(raw.info['sfreq']) # 256, 400, 512
     n_samples = raw.n_times
@@ -74,10 +74,10 @@ def get_sleep_eeg_and_stages(name, channels=ss.info.EEG_CH_NAMES, verbose=False,
         print('sampling rate:', freq, 'Hz')
         print('channel names:', raw.info['ch_names'])
         print( )
-        sleep_stage_stats = ss.data.sleep_stage_stats([study])
+        sleep_stage_stats = data.sleep_study.data.sleep_stage_stats([study])
         print( )
     
-    events, event_id = mne.events_from_annotations(raw, event_id = ss.info.EVENT_DICT, verbose=verbose)
+    events, event_id = mne.events_from_annotations(raw, event_id = data.sleep_study.info.EVENT_DICT, verbose=verbose)
     
     labels = []
     data = []
@@ -86,7 +86,7 @@ def get_sleep_eeg_and_stages(name, channels=ss.info.EEG_CH_NAMES, verbose=False,
         label, onset = event[[2, 0]]
         
         # get 30 seconds of data corresponding to the label
-        indices = [onset, onset + ss.info.INTERVAL*freq]
+        indices = [onset, onset + data.sleep_study.info.INTERVAL * freq]
         
         if indices[1] <= n_samples:
             interval_data = raw.get_data(channels, start=indices[0], stop=indices[1]) 
@@ -100,13 +100,13 @@ def get_sleep_eeg_and_stages(name, channels=ss.info.EEG_CH_NAMES, verbose=False,
         
     # Downsample to 128Hz
     if downsample:
-        if freq % ss.info.REFERENCE_FREQ == 0:
-            k = freq//ss.info.REFERENCE_FREQ
+        if freq % data.sleep_study.info.REFERENCE_FREQ == 0:
+            k = freq // data.sleep_study.info.REFERENCE_FREQ
             data = data[:,:,::k]
 
-        elif freq != ss.info.REFERENCE_FREQ:
-            x = np.linspace(0, ss.info.INTERVAL, num=ss.info.INTERVAL*freq)
-            new_x = np.linspace(0, ss.info.INTERVAL, num=ss.info.INTERVAL*ss.info.REFERENCE_FREQ)
+        elif freq != data.sleep_study.info.REFERENCE_FREQ:
+            x = np.linspace(0, data.sleep_study.info.INTERVAL, num=data.sleep_study.info.INTERVAL * freq)
+            new_x = np.linspace(0, data.sleep_study.info.INTERVAL, num=data.sleep_study.info.INTERVAL * data.sleep_study.info.REFERENCE_FREQ)
 
             f = interpolate.interp1d(x, data, kind='linear', axis= -1, assume_sorted=True)
             data = f(new_x)   
@@ -170,7 +170,7 @@ def channel_stats(verbose=True):
 
 
 def sleep_stage_stats(studies=[]):
-    res = {k.lower(): 0 for k in ss.info.EVENT_DICT}
+    res = {k.lower(): 0 for k in data.sleep_study.info.EVENT_DICT}
     if len(studies)<1:
         studies = study_list
         

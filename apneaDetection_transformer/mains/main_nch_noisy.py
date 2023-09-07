@@ -1,7 +1,6 @@
 import gc
 
-from test import test, test_age_seperated
-from train import train
+from apneaDetection_transformer.test import test
 
 # "EOG LOC-M2",  # 0
 # "EOG ROC-M1",  # 1
@@ -44,9 +43,9 @@ for ch in channel_list:
         chstr += name
         chs = chs + sig_dict[name]
     config = {
-        "data_path": "D:\\Data\\nch_30x64_seperated_age_",
-        "model_path": "./weights/semscnn_ecgspo2/f",
-        "model_name": "sem-mscnn",# + chstr,
+        "data_path": "D:\\Data\\nch_30x64.npz",
+        "model_path": "./weights/nch100/f",
+        "model_name": "Transformer_nch2_" + chstr,
         "regression": False,
 
         "transformer_layers": 5,  # best 5
@@ -58,6 +57,9 @@ for ch in channel_list:
         "epochs": 100,  # best 200
         "channels": chs,
     }
-    #train(config)
-    test_age_seperated(config)
-    gc.collect()
+    # train(config)
+    for snr in [5, 10, 20, 30, 40, 50]:
+        config["test_noise_snr"] = snr
+        config["model_name"] = config["model_name"] + "_" + "noise_" + str(snr)
+        test(config)
+        gc.collect()

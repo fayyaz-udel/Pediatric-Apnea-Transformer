@@ -2,10 +2,11 @@ import os
 import pandas as pd
 from time import time
 
-import sleep_study as ss
+from data import sleep_study as ss
+
 
 def check_annotations(df):
-    event_dict = {k.lower(): 0 for k in ss.info.EVENT_DICT.keys()}
+    event_dict = {k.lower(): 0 for k in data.sleep_study.info.EVENT_DICT.keys()}
 
     for x in df.description:
         try:
@@ -20,9 +21,9 @@ def create_dataset(output_dir='~/sleep_study_dataset'):
     output_dir = os.path.abspath(os.path.expanduser(output_dir))
 
     broken = []
-    total = len(ss.data.study_list)
+    total = len(data.sleep_study.data.study_list)
 
-    for i, name in enumerate(ss.data.study_list):
+    for i, name in enumerate(data.sleep_study.data.study_list):
 
         if i % 100 == 0:
             print('Processing %d of %d' % (i, total))
@@ -48,7 +49,7 @@ def create_dataset(output_dir='~/sleep_study_dataset'):
     end = time()
     print('Compressed, used %.2f seconds' % (end - start))
      
-    for i, name in enumerate(ss.data.study_list):
+    for i, name in enumerate(data.sleep_study.data.study_list):
         cmd = 'cd %s/Sleep_Data && tar -cf - %s* | xz -T0 > %s/Sleep_Data/%s.tar.xz' % (ss.data_dir, name, output_dir, name)
 
         print('Compressing %s.edf and %s.tsv, %d of %d' % (name, name, i + 1, total))
@@ -69,12 +70,12 @@ def get_studies_by_patient_age(low, high, txt_path='age_file.csv'):
     return df.FILE_NAME.tolist(), df.AGE_AT_SLEEP_STUDY_DAYS.tolist()
 
 def annotation_stats():
-    output_dir = './'
+    output_dir = '/'
 
     broken = []
-    total = len(ss.data.study_list)
+    total = len(data.sleep_study.data.study_list)
 
-    for i, name in enumerate(ss.data.study_list):
+    for i, name in enumerate(data.sleep_study.data.study_list):
 
         if i % 100 == 0:
             print('Processing %d of %d' % (i, total))

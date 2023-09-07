@@ -12,16 +12,16 @@ class Modality:
         self.z_dim = z_dim
         self.dim = len(inp_dim) - 1
         self.inp = None
-        self.inp_flat = None
         self.dec = None
-        self.dec_flat = None
         self.enc = None
         self.cls = None
-        self.a_s = None  # Anomaly Score
+        self.q = None  # quality Score
         ### fusion variables ###
         self.f_enc = None
         self.f_enc_flat = None
-        self.f_a_s = None
+        self.f_q = None
+        self.f_q_c = None
+        self.f_q_f = None
         self.f_h = None
         self.f_z = None
         self.f_zh = None
@@ -60,10 +60,10 @@ def get_clss(ms):
     return clss
 
 
-def get_a_s(ms):
+def get_q_s(ms):
     a_s = []
     for m in ms:
-        a_s.append(m.a_s)
+        a_s.append(m.q)
     return a_s
 
 
@@ -84,7 +84,7 @@ def get_f_enc_flats(ms):
 def get_f_a_s(ms):
     f_a_s = []
     for m in ms:
-        f_a_s.append(m.f_a_s)
+        f_a_s.append(m.f_q)
     return f_a_s
 
 
@@ -92,7 +92,7 @@ def get_f_enc_flats(ms):
     f_enc_flat = []
     for m in ms:
         f_enc_flat.append(m.f_enc_flat)
-        # f_enc_flat.append(m.f_a_s)
+        f_enc_flat.append(m.f_q_f)
     return f_enc_flat
 
 
@@ -210,11 +210,11 @@ def add_noise_to_data(data, target_snr_db, noise_chance):
 ########################################################################################################################
 
 # def get_augmentation_model():
-#     model = keras.Sequential(
+#     models = keras.Sequential(
 #         [layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),],
 #         name="data_augmentation",
 #     )
-#     return model
+#     return models
 
 
 def transform2freq(x, idx):

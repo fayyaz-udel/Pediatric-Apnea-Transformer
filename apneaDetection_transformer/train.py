@@ -5,7 +5,7 @@ from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras.losses import BinaryCrossentropy
 from sklearn.utils import shuffle
 
-from models.models import get_model
+from apneaDetection_transformer.models import get_model
 
 THRESHOLD = 1
 FOLD = 5

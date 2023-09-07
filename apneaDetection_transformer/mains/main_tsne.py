@@ -1,5 +1,9 @@
-from test import test
-from train import train
+import os
+
+from misc.tsne_test import test_tsne
+
+os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
+
 
 # 0- E1 - M2
 # 1- E2 - M1
@@ -27,14 +31,15 @@ from train import train
 sig_dict_chat = {
     "EOG": [0, 1],
     "EEG": [4, 5],
-    "ECG": [15,16],
+    "ECG": [8,15,16],
     "Resp": [9, 10],
     "SPO2": [13],
     "CO2": [14],
 }
 
 channel_list_chat = [
-    ["ECG", "SPO2"],
+
+    ["Resp", "SPO2", "CO2"],
 
 ]
 
@@ -47,21 +52,18 @@ for ch in channel_list_chat:
     print(chstr, chs)
     config = {
         "data_path": "D:\\Data\\chat_3_64.npz",
-        "model_path": "./weights/chat100/f",
-        "model_name": "Transformer_chat2_"+ chstr,
+        "model_path": "./weights/chat1000/f",
+        "model_name": "Transformer_chat22_"+ chstr,
         "regression": False,
 
-        "transformer_layers": 5,  # best 5
-        "drop_out_rate": 0.25,  # best 0.25
+        "transformer_layers": 3,  # best 5
+        "drop_out_rate": 0.05,  # best 0.25
         "num_patches": 30,  # best 30 TBD
-        "transformer_units": 32,  # best 32
+        "transformer_units": 16,  # best 32
         "regularization_weight": 0.001,  # best 0.001
-        "num_heads": 4,
+        "num_heads": 2,
         "epochs": 100,  # best 200
         "channels": chs,
     }
     # train(config)
-    for snr in [5, 10, 20, 30, 40, 50]:
-        config["test_noise_snr"] = snr
-        config["model_name"] = config["model_name"] + "_" + "noise_" + str(snr)
-        test(config)
+    test_tsne(config)

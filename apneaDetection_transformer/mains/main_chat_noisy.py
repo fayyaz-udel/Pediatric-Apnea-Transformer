@@ -1,5 +1,4 @@
-from test import test
-from train import train
+from apneaDetection_transformer.test import test
 
 # 0- E1 - M2
 # 1- E2 - M1
@@ -46,9 +45,9 @@ for ch in channel_list_chat:
         chs = chs + sig_dict_chat[name]
     print(chstr, chs)
     config = {
-        "data_path": "/media/hamed/NSSR Dataset/Data/chat_3_64.npz",#"D:\\Data\\chat_3_64.npz",
-        "model_path": "./weights/hybrid_chat_all/f",
-        "model_name": "hybrid_"+ chstr,
+        "data_path": "D:\\Data\\chat_3_64.npz",
+        "model_path": "./weights/chat100/f",
+        "model_name": "Transformer_chat2_"+ chstr,
         "regression": False,
 
         "transformer_layers": 5,  # best 5
@@ -60,5 +59,8 @@ for ch in channel_list_chat:
         "epochs": 100,  # best 200
         "channels": chs,
     }
-    train(config, 0)
-    # test(config, 0)
+    # train(config)
+    for snr in [5, 10, 20, 30, 40, 50]:
+        config["test_noise_snr"] = snr
+        config["model_name"] = config["model_name"] + "_" + "noise_" + str(snr)
+        test(config)

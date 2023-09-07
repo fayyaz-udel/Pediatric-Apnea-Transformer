@@ -1,17 +1,20 @@
 import keras
 from keras import layers
 import tensorflow as tf
-from missing_modality.modality import get_inps, get_decs, get_clss, get_encs, get_a_s, get_f_enc_flats, get_f_a_s, \
+from missing_modality.models.modality import get_inps, get_decs, get_clss, get_encs, get_q_s, get_f_enc_flats, get_f_a_s, \
     get_f_encs, generate_modalities
-from missing_modality.model_2d import create_decoder_2d, create_encoder_2d
+from missing_modality.models.model_2d import create_decoder_2d, create_encoder_2d
 
 
 def create_fusion_network(m_list, HIDDEN_STATE_DIM=16):
-    input_shape_a_s = 1
     for m in m_list:
         m.f_enc = keras.Input(m.z_dim, name=m.name + '_f_z_inp')
         m.f_enc_flat = layers.Flatten(name=m.name + '_f_enc_flat')(m.f_enc)
-        m.f_a_s = keras.Input(input_shape_a_s,name=m.name + '_f_q_inp')
+
+        m.f_q = keras.Input(m.inp_dim, name=m.name + '_f_q_inp')
+        m.f_q_c = layers.Conv1D(1, 128, strides=8, padding='same', name=m.name + '_f_q_conv')(m.f_q)
+        m.f_q_f = layers.Flatten(name=m.name + '_f_q_f')(m.f_q_c)
+
         m.f_hd = layers.Dense(HIDDEN_STATE_DIM, activation=tf.nn.tanh, name=m.name + '_f_h')(m.f_enc_flat)
         m.f_h = layers.Dropout(rate=0.05)(m.f_hd)
 
@@ -59,13 +62,10 @@ def create_multimodal_model(m_list):
         m.inp = keras.Input(m.inp_dim, name=m.name + '_inp')
         m.enc = create_encoder_2d(m.name, m.inp_dim, trainable=True)(m.inp)
         m.dec = create_decoder_2d(m.name, m.z_dim, output_shape=m.inp_dim, trainable=True)(m.enc)
-
-        m.inp_flat = layers.Flatten()(m.inp)
-        m.dec_flat = layers.Flatten()(m.dec)
-        m.a_s = keras.losses.mean_squared_error(m.inp_flat, m.dec_flat)
+        m.q = layers.Subtract()([m.inp, m.dec])
 
     ### FUSION NETWORK ###
-    label = create_fusion_network(m_list)(get_encs(m_list) + get_a_s(m_list))
+    label = create_fusion_network(m_list)(get_encs(m_list) + get_q_s(m_list))
     return keras.Model(get_inps(m_list), label, name='multimodal_model')
 
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     MODALS = ["eog", "eeg", "resp", "spo2", "ecg", "co2"]
 
     m_list = generate_modalities(MODALS)
-    model = create_fusion_network(m_list)
+    model = create_multimodal_model(m_list)
     model.summary()
-    keras.utils.plot_model(model, 'model.png', show_shapes=True)
+    keras.utils.plot_model(model, 'models.png', show_shapes=True)
 

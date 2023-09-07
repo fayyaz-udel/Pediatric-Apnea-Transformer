@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-import sleep_study as ss
+from data import sleep_study as ss
 
 EVENT_DICT = {
         'Sleep stage W' : 0,

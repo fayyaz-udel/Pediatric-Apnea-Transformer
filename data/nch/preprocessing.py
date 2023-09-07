@@ -3,13 +3,9 @@ from datetime import datetime
 import pandas as pd
 import mne
 import numpy as np
-import scipy
-from biosppy.signals.ecg import hamilton_segmenter, correct_rpeaks
-from biosppy.signals import tools as st
 from mne import make_fixed_length_events
-from scipy.interpolate import splev, splrep
 from itertools import compress
-import sleep_study as ss
+from data import sleep_study as ss
 
 THRESHOLD = 3
 NUM_WORKER = 8
@@ -126,8 +122,8 @@ def change_duration(df, label_dict=POS_EVENT_DICT, duration=CHUNK_DURATION):
 
 def preprocess(i, annotation_modifier, out_dir, ahi_dict):
     is_apnea_available, is_hypopnea_available = True, True
-    study = ss.data.study_list[i]
-    raw = ss.data.load_study(study, annotation_modifier, verbose=True)
+    study = data.sleep_study.data.study_list[i]
+    raw = data.sleep_study.data.load_study(study, annotation_modifier, verbose=True)
     ########################################   CHECK CRITERIA FOR SS   #################################################
     if not all([name in raw.ch_names for name in channels]):
         print("study " + str(study) + " skipped since insufficient channels")
