@@ -1,21 +1,20 @@
 import gc
-from datetime import datetime
 
 import keras
 import numpy as np
 from keras.callbacks import EarlyStopping
 from keras.src.losses import BinaryCrossentropy
 
+from apneaDetection_transformer.models.models import get_model
 from metrics import Result
 from missing_modality.models.modality import generate_modalities, load_data, generate_loss, get_x_train, get_x_test
 from missing_modality.models.model import create_unimodal_model, create_multimodal_model
-from apneaDetection_transformer.models.models import get_model
 
 config = {
     "MODEL_NAME": "qaf",
     "STEP": "multimodal",  # unimodal, multimodal
     # "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
-    "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_test_",
+    "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_",
     "DATA_NAME": "nch",
     "EPOCHS": 100,
     "BATCH_SIZE": 256,
@@ -24,7 +23,7 @@ config = {
     "MISS_RATIO": 0.00,
     "NOISE_CHANCE": 0.0,
     "FOLDS": 1,
-    "PHASE": "TEST",  # TRAIN, TEST
+    "PHASE": "TRAIN",  # TRAIN, TEST
     ### Transformer Config  ######################
     "transformer_layers": 5,  # best 5
     "drop_out_rate": 0.25,  # best 0.25
@@ -45,7 +44,7 @@ def train_test(config):
         #####################################################################
         first = True
         for i in range(5):
-            print('f' + str(i))
+            print('fold ' + str(i))
             data = np.load(config["DATA_PATH"] + str(i) + ".npz", allow_pickle=True)
             if i != fold:
                 if first:
