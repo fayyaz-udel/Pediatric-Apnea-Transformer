@@ -3,18 +3,19 @@ import gc
 import keras
 import numpy as np
 from keras.callbacks import EarlyStopping
-from keras.src.losses import BinaryCrossentropy
+from keras.losses import BinaryCrossentropy
 
 from apneaDetection_transformer.models.models import get_model
 from metrics import Result
-from missing_modality.models.modality import generate_modalities, load_data, generate_loss, get_x_train, get_x_test
+from missing_modality.models.modality import generate_modalities, load_data, generate_loss, get_x_train, get_x_test, \
+    delete_data
 from missing_modality.models.model import create_unimodal_model, create_multimodal_model
 
 config = {
     "MODEL_NAME": "qaf",
-    "STEP": "multimodal",  # unimodal, multimodal
-    # "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
-    "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_",
+    "STEP": "unimodal",  # unimodal, multimodal
+    "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
+    # "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_",
     "DATA_NAME": "nch",
     "EPOCHS": 100,
     "BATCH_SIZE": 256,
@@ -22,8 +23,8 @@ config = {
     "NOISE_RATIO": 0.00,
     "MISS_RATIO": 0.00,
     "NOISE_CHANCE": 0.0,
-    "FOLDS": 1,
-    "PHASE": "TRAIN",  # TRAIN, TEST
+    "FOLDS": [4],
+    "PHASE": ["TRAIN"],  # TRAIN, TEST
     ### Transformer Config  ######################
     "transformer_layers": 5,  # best 5
     "drop_out_rate": 0.25,  # best 0.25
@@ -39,7 +40,9 @@ config = {
 def train_test(config):
     result = Result()
     ### DATASET ###
-    for fold in range(config["FOLDS"]):
+    for fold in config["FOLDS"]:
+        gc.collect()
+        keras.backend.clear_session()
         m_list = generate_modalities(config["MODALS"])
         #####################################################################
         first = True
@@ -85,7 +88,7 @@ def train_test(config):
 
 
         if config["STEP"] == "unimodal":
-            if config["PHASE"] == "TRAIN":
+            if "TRAIN" in config["PHASE"]:
                 if config["MODEL_NAME"] == 'qaf':
                     history = model.fit(x=get_x_train(m_list), y=get_x_train(m_list) + [y_train] * len(m_list),
                                         validation_split=0.1, epochs=config["EPOCHS"], batch_size=config["BATCH_SIZE"],
@@ -94,7 +97,7 @@ def train_test(config):
                 else:
                     model.fit(x=x_train, y=y_train, batch_size=config["BATCH_SIZE"], epochs=config["EPOCHS"], validation_split=0.1, callbacks=[early_stopper])
                     model.save_weights('./weights/model_' + config["MODEL_NAME"] + "_" + config["DATA_NAME"] + "_" + str(fold) + '.h5')
-            elif config["PHASE"] == "TEST":
+            if "TEST" in config["PHASE"]:
                 if config["MODEL_NAME"] == 'qaf':
                     raise Exception("Unimodal test is not implemented yet for qaf")
                 else:
@@ -105,12 +108,16 @@ def train_test(config):
 
         elif config["STEP"] == "multimodal":
             if config["MODEL_NAME"] == 'qaf':
-                if config["PHASE"] == "TRAIN":
+                if "TRAIN" in config["PHASE"]:
                     model.load_weights('./weights/uniweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5', by_name=True, skip_mismatch=True)
+
+                    for m in m_list:
+                        m.dec.trainable = False
+                        m.enc.trainable = False
                     history = model.fit(x=get_x_train(m_list), y=y_train, validation_split=0.1,
                                         epochs=config["EPOCHS"], batch_size=config["BATCH_SIZE"], callbacks=[early_stopper])
                     model.save_weights('./weights/mulweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
-                elif config["PHASE"] == "TEST":
+                if "TEST" in config["PHASE"]:
                     model.load_weights('./weights/mulweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
                     predict = model.predict(get_x_test(m_list))
                     y_predict = np.where(predict > 0.5, 1, 0)
@@ -118,12 +125,11 @@ def train_test(config):
             else:
                 raise Exception("Multimodal is just avaialble for QAF")
 
-        else:
-            raise Exception("Invalid phase: " + config["PHASE"])
-
-    if config["PHASE"] == "TEST":
+        delete_data(m_list)
+    if "TEST" in config["PHASE"]:
         result.print()
         result.save("./result/" + "test_" + config["MODEL_NAME"] +"_" + config["DATA_NAME"] + ".txt", config)
+
 
 
 if __name__ == "__main__":

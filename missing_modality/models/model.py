@@ -6,7 +6,7 @@ from missing_modality.models.modality import get_inps, get_decs, get_clss, get_e
 from missing_modality.models.model_2d import create_decoder_2d, create_encoder_2d
 
 
-def create_fusion_network(m_list, HIDDEN_STATE_DIM=16):
+def create_fusion_network(m_list, HIDDEN_STATE_DIM=32):
     for m in m_list:
         m.f_enc = keras.Input(m.z_dim, name=m.name + '_f_z_inp')
         m.f_enc_flat = layers.Flatten(name=m.name + '_f_enc_flat')(m.f_enc)
@@ -16,13 +16,13 @@ def create_fusion_network(m_list, HIDDEN_STATE_DIM=16):
         m.f_q_f = layers.Flatten(name=m.name + '_f_q_f')(m.f_q_c)
 
         m.f_hd = layers.Dense(HIDDEN_STATE_DIM, activation=tf.nn.tanh, name=m.name + '_f_h')(m.f_enc_flat)
-        m.f_h = layers.Dropout(rate=0.05)(m.f_hd)
+        m.f_h = layers.Dropout(rate=0.25)(m.f_hd)
 
     First = True
     z_stack = tf.concat(get_f_enc_flats(m_list), 1, name='z_stack')
     for m in m_list:
         m.f_zd = layers.Dense(HIDDEN_STATE_DIM, activation='sigmoid', name=m.name + "_z")(z_stack)
-        m.f_z = layers.Dropout(rate=0.05)(m.f_zd)
+        m.f_z = layers.Dropout(rate=0.25)(m.f_zd)
         m.f_zh = layers.Multiply(name=m.name + "_zh")([m.f_z, m.f_h])
 
     for m in m_list:
@@ -60,8 +60,8 @@ def create_unimodal_model(m_list):
 def create_multimodal_model(m_list):
     for m in m_list:
         m.inp = keras.Input(m.inp_dim, name=m.name + '_inp')
-        m.enc = create_encoder_2d(m.name, m.inp_dim, trainable=True)(m.inp)
-        m.dec = create_decoder_2d(m.name, m.z_dim, output_shape=m.inp_dim, trainable=True)(m.enc)
+        m.enc = create_encoder_2d(m.name, m.inp_dim)(m.inp)
+        m.dec = create_decoder_2d(m.name, m.z_dim, output_shape=m.inp_dim)(m.enc)
         m.q = layers.Subtract()([m.inp, m.dec])
 
     ### FUSION NETWORK ###

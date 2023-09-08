@@ -93,7 +93,7 @@ model_dict = {
 
     "cnn": create_cnn_model((60 * 32, 7)),
     "sem-mscnn": create_semscnn_model((60 * 32, 7)),
-    "cnn-lstm": create_cnnlstm_model((60 * 32, 7)),
+    # "cnn-lstm": create_cnnlstm_model((60 * 32, 7)),
     "hybrid": create_hybrid_transformer_model((60 * 32, 3)),
 }
 

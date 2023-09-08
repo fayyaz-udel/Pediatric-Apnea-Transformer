@@ -1,3 +1,4 @@
+import gc
 import random
 
 import numpy as np
@@ -30,6 +31,14 @@ class Modality:
         self.x_test = None
         self.need_freq = need_freq
         self.need_reshape = need_reshape
+
+def delete_data(ms):
+    for m in ms:
+        del m.x_test
+        del m.x_train
+        print("delete DATA")
+        gc.collect()
+
 
 
 def get_inps(ms):
