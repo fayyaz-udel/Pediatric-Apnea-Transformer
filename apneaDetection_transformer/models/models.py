@@ -30,11 +30,11 @@ def create_cnn_model(input_shape):
 def create_cnnlstm_model(input_a_shape, weight=1e-3):
     cnn_filters = 32 # 128
     cnn_kernel_size = 4 # 4
-    input1 = Input(shape=input_a_shape)
-    input1 = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
+    input = Input(shape=input_a_shape)
+    input_norm = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
                                               beta_initializer="glorot_uniform",
-                                              gamma_initializer="glorot_uniform")(input1)
-    x1 = Conv1D(cnn_filters, cnn_kernel_size, activation='relu')(input1)
+                                              gamma_initializer="glorot_uniform")(input)
+    x1 = Conv1D(cnn_filters, cnn_kernel_size, activation='relu')(input_norm)
     x1 = Conv1D(cnn_filters, cnn_kernel_size, activation='relu')(x1)
     x1 = BatchNormalization()(x1)
     x1 = MaxPooling1D()(x1)
@@ -56,7 +56,7 @@ def create_cnnlstm_model(input_a_shape, weight=1e-3):
     x1 = Dense(32, activation='relu')(x1) #64
     outputs = Dense(1, activation='sigmoid')(x1)
 
-    model = Model(inputs=input1, outputs=outputs)
+    model = Model(inputs=input, outputs=outputs)
     return model
 
 
@@ -93,7 +93,7 @@ model_dict = {
 
     "cnn": create_cnn_model((60 * 32, 7)),
     "sem-mscnn": create_semscnn_model((60 * 32, 7)),
-    # "cnn-lstm": create_cnnlstm_model((60 * 32, 7)),
+    "cnn-lstm": create_cnnlstm_model((60 * 32, 7)),
     "hybrid": create_hybrid_transformer_model((60 * 32, 3)),
 }
 
@@ -113,7 +113,7 @@ def get_model(config):
 
 if __name__ == "__main__":
     config = {
-        "MODEL_NAME": "hybrid",
+        "MODEL_NAME": "cnn-lstm",
         "regression": False,
 
         "transformer_layers": 4,  # best 5
@@ -126,5 +126,6 @@ if __name__ == "__main__":
         "channels": [14, 18, 19, 20],
     }
     model = get_model(config)
-    model.build(input_shape=(1, 60 * 32, 10))
+    model.build(input_shape=(60 * 32, 7))
     print(model.summary())
+

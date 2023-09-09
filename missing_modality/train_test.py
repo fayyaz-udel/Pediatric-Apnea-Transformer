@@ -1,8 +1,10 @@
+import gc
+
 import keras
 import numpy as np
 from keras.callbacks import EarlyStopping
 from keras.losses import BinaryCrossentropy
-
+import tensorflow as tf
 from apneaDetection_transformer.models.models import get_model
 from metrics import Result
 from missing_modality.models.modality import generate_modalities, load_data, generate_loss, get_x_train, get_x_test
@@ -11,9 +13,9 @@ from missing_modality.models.model import create_unimodal_model, create_multimod
 config = {
     "MODEL_NAME": "qaf",
     "STEP": "unimodal",  # unimodal, multimodal
-    "DATA_PATH": "/home/hamedcan/dd/chat_b_30x64_",
+    "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
     # "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_",
-    "DATA_NAME": "chat",
+    "DATA_NAME": "cnn",
     "EPOCHS": 100,
     "BATCH_SIZE": 256,
     "MODALS": ["eog", "eeg", "resp", "spo2", "ecg", "co2"],
@@ -38,13 +40,17 @@ def train_test(config):
     result = Result()
     ### DATASET ###
     for fold in config["FOLDS"]:
+        gc.collect()
+        keras.backend.clear_session()
+
         m_list = generate_modalities(config["MODALS"])
         #####################################################################
         first = True
+        x_test, x_train = None, None
         for i in range(5):
             print('fold ' + str(i))
             data = np.load(config["DATA_PATH"] + str(i) + ".npz", allow_pickle=True)
-            if i != fold and "TRAIN" in config["PHASE"]:
+            if i != fold:# and "TRAIN" in config["PHASE"]:
                 if first:
                     x_train = data['x']
                     y_train = np.sign(data['y_apnea'] + data['y_hypopnea'])
@@ -52,7 +58,7 @@ def train_test(config):
                 else:
                     x_train = np.concatenate((x_train, data['x']))
                     y_train = np.concatenate((y_train, np.sign(data['y_apnea'] + data['y_hypopnea'])))
-            if i == fold and "TEST" in config["PHASE"]:
+            if i == fold:# and "TEST" in config["PHASE"]:
                 x_test = data['x']
                 y_test = np.sign(data['y_apnea'] + data['y_hypopnea'])
         ######################################################################
@@ -128,4 +134,9 @@ def train_test(config):
 
 
 if __name__ == "__main__":
-    train_test(config)
+    for data_name in [('chat',"/home/hamedcan/dd/chat_b_30x64__",)]: # ('nch',"/home/hamedcan/d/nch_30x64_"),
+        config["DATA_NAME"] = data_name[0]
+        config["DATA_PATH"] = data_name[1]
+        for model_name in ['cnn-lstm', 'cnn', 'Transformer']:
+            config["MODEL_NAME"] = model_name
+            train_test(config)

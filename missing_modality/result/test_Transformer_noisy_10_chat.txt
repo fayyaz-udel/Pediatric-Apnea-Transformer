@@ -1,0 +1,17 @@
+{'MODEL_NAME': 'Transformer', 'DATA_NAME': 'chat', 'PHASE': 'multimodal', 'DATA_PATH': '/home/hamedcan/dd/chat_b_30x64__', 'EPOCHS': 100, 'BATCH_SIZE': 256, 'MODALS': ['eog', 'eeg', 'resp', 'spo2', 'ecg', 'co2'], 'NOISE_RATIO': 10, 'MISS_RATIO': 0.0, 'NOISE_CHANCE': 0.25, 'FOLDS': 1, 'TRAIN': False, 'transformer_layers': 5, 'drop_out_rate': 0.25, 'num_patches': 30, 'transformer_units': 32, 'regularization_weight': 0.001, 'num_heads': 4, 'epochs': 100, 'channels': [0, 3, 5, 6, 9, 10, 4], 'log_name': 'Transformer_noisy_10'}
+=========================================================================== 
+[81.58357771260997] 
+[82.46908655763862] 
+[80.44747081712063] 
+[82.73084479371316] 
+[81.44573567067165] 
+[89.50076445001642] 
+[87.77746978843103] 
+Accuracy: 81.58 -+ 0.000 
+Precision: 82.47 -+ 0.000 
+Recall: 80.45 -+ 0.000 
+Specifity: 82.73 -+ 0.000 
+F1: 81.45 -+ 0.000 
+AUROC: 89.50 -+ 0.000 
+AUPRC: 87.78 -+ 0.000 
+$ 81.6 \pm 0.0$& $82.5 \pm 0.0$& $80.4 \pm 0.0$& $81.4 \pm 0.0$& $89.5 \pm 0.0$& 

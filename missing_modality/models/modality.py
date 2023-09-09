@@ -178,6 +178,9 @@ def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, mi
 
 
 def normalize(xx):
+    if xx is None:
+        return None
+
     if len(xx.shape) == 4:
         for i in range(xx.shape[-1]):
             x = xx[:, :, :, i]
@@ -227,6 +230,8 @@ def add_noise_to_data(data, target_snr_db, noise_chance):
 
 
 def transform2freq(x, idx):
+    if x is None:
+        return None
     out_x = np.zeros((x.shape[0], 128, 16, 1))
 
     for i in range(x.shape[0]):
@@ -241,6 +246,9 @@ def transform2freq(x, idx):
 
 
 def resize(x, idx):
+    if x is None:
+        return None
+
     out_x = np.zeros((x.shape[0], 128, 16, len(idx)))
     for n, id in enumerate(idx):
         for i in range(x.shape[0]):

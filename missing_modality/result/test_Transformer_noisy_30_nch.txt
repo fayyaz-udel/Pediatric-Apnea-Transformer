@@ -1,0 +1,17 @@
+{'MODEL_NAME': 'Transformer', 'DATA_NAME': 'nch', 'PHASE': 'multimodal', 'DATA_PATH': '/home/hamedcan/d/nch_30x64_', 'EPOCHS': 100, 'BATCH_SIZE': 256, 'MODALS': ['eog', 'eeg', 'resp', 'spo2', 'ecg', 'co2'], 'NOISE_RATIO': 30, 'MISS_RATIO': 0.0, 'NOISE_CHANCE': 0.25, 'FOLDS': 1, 'TRAIN': False, 'transformer_layers': 5, 'drop_out_rate': 0.25, 'num_patches': 30, 'transformer_units': 32, 'regularization_weight': 0.001, 'num_heads': 4, 'epochs': 100, 'channels': [0, 3, 5, 6, 9, 10, 4], 'log_name': 'Transformer_noisy_30'}
+=========================================================================== 
+[85.42028393422531] 
+[83.19368198015987] 
+[88.61304883052934] 
+[82.25544030913159] 
+[85.81789280214595] 
+[92.938769415548] 
+[91.8290594890053] 
+Accuracy: 85.42 -+ 0.000 
+Precision: 83.19 -+ 0.000 
+Recall: 88.61 -+ 0.000 
+Specifity: 82.26 -+ 0.000 
+F1: 85.82 -+ 0.000 
+AUROC: 92.94 -+ 0.000 
+AUPRC: 91.83 -+ 0.000 
+$ 85.4 \pm 0.0$& $83.2 \pm 0.0$& $88.6 \pm 0.0$& $85.8 \pm 0.0$& $92.9 \pm 0.0$& 
