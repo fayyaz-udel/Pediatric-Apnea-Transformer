@@ -156,7 +156,8 @@ def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, mi
     ###############################################################
     ###############################################################
     if return_data:
-        x_train = x_train[:, :, [0, 1, 3, 4, 5, 7, 8]]
+        if x_train is not None:
+            x_train = x_train[:, :, [0, 1, 3, 4, 5, 7, 8]]
         x_test = x_test[:, :, [0, 1, 3, 4, 5, 7, 8]]
 
         return normalize(x_train), normalize(x_test)

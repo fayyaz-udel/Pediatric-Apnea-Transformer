@@ -11,11 +11,7 @@ from missing_modality.models.modality import generate_modalities, load_data, gen
 from missing_modality.models.model import create_unimodal_model, create_multimodal_model
 
 config = {
-    "MODEL_NAME": "qaf",
-    "STEP": "unimodal",  # unimodal, multimodal
-    "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
-    # "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_",
-    "DATA_NAME": "cnn",
+    "STEP": "multimodal",  # unimodal, multimodal
     "EPOCHS": 100,
     "BATCH_SIZE": 256,
     "MODALS": ["eog", "eeg", "resp", "spo2", "ecg", "co2"],
@@ -23,7 +19,7 @@ config = {
     "MISS_RATIO": 0.00,
     "NOISE_CHANCE": 0.0,
     "FOLDS": [0, 1, 2, 3, 4],
-    "PHASE": ["TRAIN"],  # TRAIN, TEST
+    "PHASE": ["TEST"],  # TRAIN, TEST
     ### Transformer Config  ######################
     "transformer_layers": 5,  # best 5
     "drop_out_rate": 0.25,  # best 0.25
@@ -34,7 +30,6 @@ config = {
     "epochs": 100,  # best 200
     "channels": [0, 3, 5, 6, 9, 10, 4],
 }
-
 
 def train_test(config):
     result = Result()
@@ -50,7 +45,7 @@ def train_test(config):
         for i in range(5):
             print('fold ' + str(i))
             data = np.load(config["DATA_PATH"] + str(i) + ".npz", allow_pickle=True)
-            if i != fold:# and "TRAIN" in config["PHASE"]:
+            if i != fold and "TRAIN" in config["PHASE"]:
                 if first:
                     x_train = data['x']
                     y_train = np.sign(data['y_apnea'] + data['y_hypopnea'])
@@ -101,6 +96,7 @@ def train_test(config):
                 if config["MODEL_NAME"] == 'qaf':
                     raise Exception("Unimodal test is not implemented yet for qaf")
                 else:
+                    print("Test Baseline: " + config["MODEL_NAME"])
                     model.load_weights(
                         './weights/model_' + config["MODEL_NAME"] + "_" + config["DATA_NAME"] + "_" + str(fold) + '.h5')
                     predict = model.predict(x_test)
@@ -121,6 +117,7 @@ def train_test(config):
                                         callbacks=[early_stopper])
                     model.save_weights('./weights/mulweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
                 if "TEST" in config["PHASE"]:
+                    print("=== Test Multimodal QAF ===")
                     model.load_weights('./weights/mulweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
                     predict = model.predict(get_x_test(m_list))
                     y_predict = np.where(predict > 0.5, 1, 0)
@@ -131,12 +128,12 @@ def train_test(config):
     if "TEST" in config["PHASE"]:
         result.print()
         result.save("./result/" + "test_" + config["MODEL_NAME"] + "_" + config["DATA_NAME"] + ".txt", config)
-
+        return result
 
 if __name__ == "__main__":
-    for data_name in [('chat',"/home/hamedcan/dd/chat_b_30x64__",)]: # ('nch',"/home/hamedcan/d/nch_30x64_"),
+    for data_name in [('chat',"/home/hamedcan/dd/chat_b_30x64__",)]: # , ('nch',"/home/hamedcan/d/nch_30x64_")
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
-        for model_name in ['cnn-lstm', 'cnn', 'Transformer']:
+        for model_name in ['qaf']:
             config["MODEL_NAME"] = model_name
             train_test(config)
