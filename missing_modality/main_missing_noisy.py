@@ -7,8 +7,6 @@ if __name__ == "__main__":
         "EPOCHS": 100,
         "BATCH_SIZE": 256,
         "MODALS": ["eog", "eeg", "resp", "spo2", "ecg", "co2"],
-        "NOISE_RATIO": 0.00,
-        "MISS_RATIO": 0.00,
         "NOISE_CHANCE": 0.25,
         "FOLDS": [0,1,2,3,4],
         "PHASE": "TEST",
@@ -41,7 +39,7 @@ if __name__ == "__main__":
                     config["NOISE_RATIO"] = noise_ratio
                     result = train_test(config)
                     out_str = data_name[0] + ", " + model_name + ", " + str(miss_ratio) + ", " + str(noise_ratio) + ", "
-                    out_str += str("AUROC: %.1f, %.1f" % (np.mean(result.auroc_list), np.std(result.auroc_list))) + " \n"
+                    out_str += str("%.1f, %.1f" % (np.mean(result.auroc_list), np.std(result.auroc_list))) + " \n"
                     f = open("./result/miss_noise.txt", "a")
                     f.write(out_str)
                     f.close()
