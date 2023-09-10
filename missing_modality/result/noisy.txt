@@ -17,4 +17,10 @@ nch, qaf,  10, AUROC: 87.4, 1.6
 nch, qaf,  20, AUROC: 91.8, 0.7 
 nch, qaf,  30, AUROC: 93.3, 0.5 
 nch, qaf,  40, AUROC: 93.4, 0.5 
-nch, qaf,  50, AUROC: 93.4, 0.5 
+nch, qaf,  50, AUROC: 93.4, 0.5
+
+nch, qaf,  10, AUROC: 87.0, 2.5 
+nch, qaf,  20, AUROC: 91.5, 0.7 
+nch, qaf,  30, AUROC: 93.2, 0.3 
+nch, qaf,  40, AUROC: 93.4, 0.3 
+nch, qaf,  50, AUROC: 93.4, 0.3 

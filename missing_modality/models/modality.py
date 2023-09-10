@@ -149,7 +149,7 @@ def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, mi
         print("miss channel " + str(miss_index))
         for i in range(x_test.shape[0]):
             for j in miss_index:
-                    x_test[i, :, j] = np.ones_like(x_test[i, :, j])
+                    x_test[i, :, j] = np.zeros_like(x_test[i, :, j])
     ###########   ADD Some Noise     ##############################
     if noise_ratio > 0:
         print("noise ratio " + str(noise_ratio))
@@ -187,14 +187,16 @@ def normalize(xx):
         for i in range(xx.shape[-1]):
             x = xx[:, :, :, i]
             x = np.clip(x, np.percentile(x, 0.1), np.percentile(x, 99.9))
-            x = (x - np.min(x)) / (np.max(x) - np.min(x))
-            xx[:, :, :, i] = x
+            if np.max(x) - np.min(x) != 0:
+                x = (x - np.min(x)) / (np.max(x) - np.min(x))
+                xx[:, :, :, i] = x
     else:
         for i in range(xx.shape[-1]):
             x = xx[:, :, i]
             x = np.clip(x, np.percentile(x, 0.1), np.percentile(x, 99.9))
-            x = (x - np.min(x)) / (np.max(x) - np.min(x))
-            xx[:, :, i] = x
+            if np.max(x) - np.min(x) != 0:
+                x = (x - np.min(x)) / (np.max(x) - np.min(x))
+                xx[:, :, i] = x
     return xx
 
 

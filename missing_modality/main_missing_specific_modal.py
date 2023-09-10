@@ -1,12 +1,10 @@
-from missing_modality.train_test import train, train_test
+import numpy as np
+
+from missing_modality.train_test import train_test
 
 if __name__ == "__main__":
     config = {
-        "MODEL_NAME": "Transformer",
-        "DATA_NAME": "nch",
         "STEP": "multimodal",  # unimodal, multimodal
-        "DATA_PATH": "/media/hamed/NSSR Dataset/nch_30x64_",
-        # "DATA_PATH": "/home/hamedcan/d/nch_30x64_",
         "EPOCHS": 100,
         "BATCH_SIZE": 256,
         "MODALS": ["eog", "eeg", "resp", "spo2", "ecg", "co2"],
@@ -16,7 +14,7 @@ if __name__ == "__main__":
         "MISS_RATIO": 0.00,
         "MISS_INDEX": 0,
 
-        "FOLDS": 1,
+        "FOLDS": [0,1,2,3,4],
         "PHASE": "TEST",
         ########################################################
         "transformer_layers": 5,  # best 5
@@ -29,8 +27,23 @@ if __name__ == "__main__":
         "channels": [0, 3, 5, 6, 9, 10, 4],
     }
 
-    for miss_indexes in [[0,1]]:
-        config["log_name"] = config["MODEL_NAME"] + "_" + config["DATA_NAME"] + "_missModal_" + str(config["MISS_INDEX"])
-        config["MISS_INDEX"] = miss_indexes
-        train_test(config)
+    for data_name in [('nch', "/home/hamed/d/nch_30x64_")]: # ,('chat', "/home/hamedcan/dd/chat_b_30x64__",)
+        config["DATA_NAME"] = data_name[0]
+        config["DATA_PATH"] = data_name[1]
+        for model_name in ['cnn', 'cnn-lstm', 'Transformer', 'qaf']:
+            if model_name == "qaf":
+                config["STEP"] = 'multimodal'
+            else:
+                config["STEP"] = 'unimodal'
+            config["MODEL_NAME"] = model_name
+            for miss_indexes in [[0],[1], [3],[4],[5],[7,8], [0,1]]:
+                config["log_name"] = config["MODEL_NAME"] + "_" + config["DATA_NAME"] + "_missmodal_" + str(miss_indexes)
+                config["MISS_INDEX"] = miss_indexes
+
+                result = train_test(config)
+                out_str = data_name[0] + ", " + model_name + ", " + str(miss_indexes) + ", "
+                out_str += str("AUROC: %.1f, %.1f" % (np.mean(result.auroc_list), np.std(result.auroc_list))) + " \n"
+                f = open("./result/missing_modal.txt", "a")
+                f.write(out_str)
+                f.close()
 
