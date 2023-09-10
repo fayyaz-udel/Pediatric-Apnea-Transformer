@@ -140,7 +140,7 @@ def  train_test(config):
         return result
 
 if __name__ == "__main__":
-    for data_name in [('nch',"/home/hamedcan/d/nch_30x64_")]: # , ('chat',"/home/hamedcan/dd/chat_b_30x64_",)
+    for data_name in [('nch',"/home/hamed/d/nch_30x64_")]: # , ('chat',"/home/hamedcan/dd/chat_b_30x64_",)
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
         for model_name in ['qaf']:

@@ -23,10 +23,10 @@ if __name__ == "__main__":
 
 
 
-    for data_name in [('chat',"/home/hamed/dd/chat_b_30x64_",), ('nch',"/home/hamed/d/nch_30x64_")]:
+    for data_name in [ ('nch',"/home/hamed/d/nch_30x64_")]: #('chat',"/home/hamedcan/dd/chat_b_30x64__",),
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
-        for model_name in ['cnn','cnn-lstm','Transformer','qaf']:
+        for model_name in ['cnn','Transformer','qaf']:
             if model_name == "qaf":
                 config["STEP"] = 'multimodal'
             else:

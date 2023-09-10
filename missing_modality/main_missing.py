@@ -22,7 +22,7 @@ if __name__ == "__main__":
         "channels": [0, 3, 5, 6, 9, 10, 4],
     }
 
-    for data_name in [('chat', "/home/hamedcan/dd/chat_b_30x64__",)]: # ('nch', "/home/hamed/d/nch_30x64_"),
+    for data_name in [('nch', "/home/hamed/d/nch_30x64_")]: # ,('chat', "/home/hamedcan/dd/chat_b_30x64__",)
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
         for model_name in ['cnn', 'cnn-lstm', 'Transformer', 'qaf']:
@@ -31,7 +31,7 @@ if __name__ == "__main__":
             else:
                 config["STEP"] = 'unimodal'
             config["MODEL_NAME"] = model_name
-            for miss_ratio in [0, 0.1, 0.2, 0.3, 0.4, 0.5]:
+            for miss_ratio in [0.1, 0.2, 0.3, 0.4, 0.5]:
                 config["log_name"] = config["MODEL_NAME"] + "_" + config["DATA_NAME"] + "_miss_" + str(miss_ratio)
                 config["MISS_RATIO"] = miss_ratio
                 result = train_test(config)

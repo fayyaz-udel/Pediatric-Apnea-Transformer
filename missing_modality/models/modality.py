@@ -143,7 +143,7 @@ def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, mi
             for j in range(x_test.shape[2]):
                 if random.random() < miss_ratio:
                     x_test[i, :, j] = np.zeros_like(x_test[i, :, j])
-                    x_train[i, :, j] = np.zeros_like(x_train[i, :, j])
+                    # x_train[i, :, j] = np.zeros_like(x_train[i, :, j])
     ###########   Miss Specific Channels    #######################
     if miss_index is not None:
         print("miss channel " + str(miss_index))
