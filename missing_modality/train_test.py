@@ -18,8 +18,8 @@ config = {
     "NOISE_RATIO": 0.00,
     "MISS_RATIO": 0.00,
     "NOISE_CHANCE": 0.0,
-    "FOLDS": [0, 1, 2, 3, 4],
-    "PHASE": ["TRAIN"],  # TRAIN, TEST
+    "FOLDS": [0,1,2,3,4],
+    "PHASE": ["TEST"],  # TRAIN, TEST
     ### Transformer Config  ######################
     "transformer_layers": 5,  # best 5
     "drop_out_rate": 0.25,  # best 0.25
@@ -131,9 +131,9 @@ def  train_test(config):
         return result
 
 if __name__ == "__main__":
-    for data_name in [('nch',"/home/hamed/d/nch_30x64_")]: # , ('chat',"/home/hamedcan/dd/chat_b_30x64_",)
+    for data_name in [('nch',"/home/hamedcan/d/nch_30x64_")]: # , ('chat',"/home/hamedcan/dd/chat_b_30x64_",)
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
-        for model_name in ['cnn-lstm']:
+        for model_name in ['cnn']:
             config["MODEL_NAME"] = model_name
             train_test(config)

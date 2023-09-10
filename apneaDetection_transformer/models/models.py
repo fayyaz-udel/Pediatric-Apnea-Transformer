@@ -8,19 +8,19 @@ from .transformer import create_transformer_model, create_hybrid_transformer_mod
 
 def create_cnn_model(input_shape):
     model = Sequential()
-    for i in range(5): # 10
-        model.add(Conv1D(15, 128, padding='same')) #45
-        model.add(BatchNormalization())
+    for i in range(2): # 10
+        model.add(Conv1D(5, 16, padding='same')) #45
+        #model.add(BatchNormalization())
         model.add(Activation(relu))
         model.add(MaxPooling1D())
-        model.add(Dropout(0.5))
+        model.add(Dropout(0.05))
 
     model.add(Flatten())
-    for i in range(2): #4
-        model.add(Dense(512))
-        model.add(BatchNormalization())
+    for i in range(1): #4
+        model.add(Dense(32))
+        #model.add(BatchNormalization())
         model.add(Activation(relu))
-        model.add(Dropout(0.5))
+        model.add(Dropout(0.05))
 
     model.add(Dense(1, activation='sigmoid'))
 
