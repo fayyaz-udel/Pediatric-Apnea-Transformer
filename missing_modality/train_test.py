@@ -18,8 +18,8 @@ config = {
     "NOISE_RATIO": 0.00,
     "MISS_RATIO": 0.00,
     "NOISE_CHANCE": 0.0,
-    "FOLDS": [0, 1, 2, 3, 4],
-    "PHASE": ["TRAIN"],  # TRAIN, TEST
+    "FOLDS": [0,1,2,3,4],
+    "PHASE": ["TEST"],  # TRAIN, TEST
     ### Transformer Config  ######################
     "transformer_layers": 5,  # best 5
     "drop_out_rate": 0.25,  # best 0.25
