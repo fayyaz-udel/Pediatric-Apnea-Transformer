@@ -28,13 +28,11 @@ def create_cnn_model(input_shape):
 
 
 def create_cnnlstm_model(input_a_shape, weight=1e-3):
-    cnn_filters = 32 # 128
+    cnn_filters = 128 # 128
     cnn_kernel_size = 4 # 4
     input = Input(shape=input_a_shape)
-    input_norm = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,
-                                              beta_initializer="glorot_uniform",
-                                              gamma_initializer="glorot_uniform")(input)
-    x1 = Conv1D(cnn_filters, cnn_kernel_size, activation='relu')(input_norm)
+    # input_norm = tfa.layers.InstanceNormalization(axis=-1, epsilon=1e-6, center=False, scale=False,beta_initializer="glorot_uniform",gamma_initializer="glorot_uniform")(input)
+    x1 = Conv1D(cnn_filters, cnn_kernel_size, activation='relu')(input)
     x1 = Conv1D(cnn_filters, cnn_kernel_size, activation='relu')(x1)
     x1 = BatchNormalization()(x1)
     x1 = MaxPooling1D()(x1)
@@ -52,8 +50,8 @@ def create_cnnlstm_model(input_a_shape, weight=1e-3):
     x1 = LSTM(32)(x1) #256
     x1 = Flatten()(x1)
 
-    x1 = Dense(32, activation='relu')(x1) #64
-    x1 = Dense(32, activation='relu')(x1) #64
+    x1 = Dense(64, activation='relu')(x1) #64
+    x1 = Dense(64, activation='relu')(x1) #64
     outputs = Dense(1, activation='sigmoid')(x1)
 
     model = Model(inputs=input, outputs=outputs)

@@ -11,7 +11,7 @@ from missing_modality.models.modality import generate_modalities, load_data, gen
 from missing_modality.models.model import create_unimodal_model, create_multimodal_model
 
 config = {
-    "STEP": "multimodal",  # unimodal, multimodal
+    "STEP": "unimodal",  # unimodal, multimodal
     "EPOCHS": 100,
     "BATCH_SIZE": 256,
     "MODALS": ["eog", "eeg", "resp", "spo2", "ecg", "co2"],
@@ -19,7 +19,7 @@ config = {
     "MISS_RATIO": 0.00,
     "NOISE_CHANCE": 0.0,
     "FOLDS": [0, 1, 2, 3, 4],
-    "PHASE": ["TEST"],  # TRAIN, TEST
+    "PHASE": ["TRAIN"],  # TRAIN, TEST
     ### Transformer Config  ######################
     "transformer_layers": 5,  # best 5
     "drop_out_rate": 0.25,  # best 0.25
@@ -131,9 +131,9 @@ def  train_test(config):
         return result
 
 if __name__ == "__main__":
-    for data_name in [('chat',"/home/hamedcan/dd/chat_b_30x64_",)]: # , ('nch',"/home/hamedcan/d/nch_30x64_")
+    for data_name in [('nch',"/home/hamed/d/nch_30x64_")]: # , ('chat',"/home/hamedcan/dd/chat_b_30x64_",)
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
-        for model_name in ['qaf']:
+        for model_name in ['cnn-lstm']:
             config["MODEL_NAME"] = model_name
             train_test(config)
