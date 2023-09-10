@@ -22,7 +22,7 @@ if __name__ == "__main__":
         "channels": [0, 3, 5, 6, 9, 10, 4],
     }
 
-    for data_name in [('nch', "/home/hamedcan/d/nch_30x64_"), ('chat', "/home/hamedcan/dd/chat_b_30x64__",)]:
+    for data_name in [('chat', "/home/hamedcan/dd/chat_b_30x64__",)]: # ('nch', "/home/hamed/d/nch_30x64_"),
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
         for model_name in ['cnn', 'cnn-lstm', 'Transformer', 'qaf']:

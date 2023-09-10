@@ -31,7 +31,7 @@ config = {
     "channels": [0, 3, 5, 6, 9, 10, 4],
 }
 
-def train_test(config):
+def  train_test(config):
     result = Result()
     ### DATASET ###
     for fold in config["FOLDS"]:
