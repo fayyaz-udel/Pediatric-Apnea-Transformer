@@ -6,7 +6,7 @@ from missing_modality.models.modality import get_inps, get_decs, get_clss, get_e
 from missing_modality.models.model_2d import create_decoder_2d, create_encoder_2d
 
 
-def create_fusion_network(m_list, HIDDEN_STATE_DIM=32):
+def create_fusion_network(m_list, HIDDEN_STATE_DIM=8):
     for m in m_list:
         m.f_enc = keras.Input(m.z_dim, name=m.name + '_f_z_inp')
         m.f_enc_flat = layers.Flatten(name=m.name + '_f_enc_flat')(m.f_enc)

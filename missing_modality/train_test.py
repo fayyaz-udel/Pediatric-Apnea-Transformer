@@ -2,7 +2,7 @@ import gc
 
 import keras
 import numpy as np
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, LearningRateScheduler
 from keras.losses import BinaryCrossentropy
 import tensorflow as tf
 from apneaDetection_transformer.models.models import get_model
@@ -10,16 +10,25 @@ from metrics import Result
 from missing_modality.models.modality import generate_modalities, load_data, generate_loss, get_x_train, get_x_test
 from missing_modality.models.model import create_unimodal_model, create_multimodal_model
 
+
+def lr_schedule(epoch, lr):
+    if epoch > 5 and (epoch - 1) % 5 == 0:
+        lr *= 0.25
+    return lr
+
+
+lr_scheduler = LearningRateScheduler(lr_schedule)
+
 config = {
-    "STEP": "unimodal",  # unimodal, multimodal
+    "STEP": "multimodal",  # unimodal, multimodal
     "EPOCHS": 100,
     "BATCH_SIZE": 256,
     "MODALS": ["eog", "eeg", "resp", "spo2", "ecg", "co2"],
     "NOISE_RATIO": 0.00,
-    "MISS_RATIO": 0.00,
+    "MISS_RATIO": 0.25,
     "NOISE_CHANCE": 0.0,
     "FOLDS": [0,1,2,3,4],
-    "PHASE": ["TEST"],  # TRAIN, TEST
+    "PHASE": ["TRAIN"],  # TRAIN, TEST
     ### Transformer Config  ######################
     "transformer_layers": 5,  # best 5
     "drop_out_rate": 0.25,  # best 0.25
@@ -114,7 +123,7 @@ def  train_test(config):
                         m.enc.trainable = False
                     history = model.fit(x=get_x_train(m_list), y=y_train, validation_split=0.1,
                                         epochs=config["EPOCHS"], batch_size=config["BATCH_SIZE"],
-                                        callbacks=[early_stopper])
+                                        callbacks=[early_stopper, lr_scheduler])
                     model.save_weights('./weights/mulweights_' + config["DATA_NAME"] + "_f" + str(fold) + '.h5')
                 if "TEST" in config["PHASE"]:
                     print("=== Test Multimodal QAF ===")
@@ -134,6 +143,6 @@ if __name__ == "__main__":
     for data_name in [('nch',"/home/hamedcan/d/nch_30x64_")]: # , ('chat',"/home/hamedcan/dd/chat_b_30x64_",)
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
-        for model_name in ['cnn']:
+        for model_name in ['qaf']:
             config["MODEL_NAME"] = model_name
             train_test(config)
