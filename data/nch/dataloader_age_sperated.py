@@ -24,18 +24,19 @@ from scipy.interpolate import splev, splrep
 ######### ADDED IN THIS STEP #########
 # RRI #11
 # Ramp #12
-# Demo #13
 
 
-SIGS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+SIGS = [0, 3, 5, 6, 9, 10, 4]
 s_count = len(SIGS)
 
 THRESHOLD = 3
-PATH = "D:\\nch_30x64\\"
+PATH = "/media/hamed/NSSR Dataset/nch_30x64/"
 FREQ = 64
 EPOCH_DURATION = 30
 ECG_SIG = 4
-OUT_PATH = "D:\\nch_30x64_seperated_age"
+OUT_PATH = "/media/hamed/NSSR Dataset/age/nch_30x64_seperated_age"
+
+
 
 
 def extract_rri(signal, ir, CHUNK_DURATION):
@@ -58,7 +59,7 @@ def extract_rri(signal, ir, CHUNK_DURATION):
 
 
 def load_data(path):
-    age = pd.read_csv(r"D:\nchsdb\health_data\SLEEP_STUDY.csv")
+    age = pd.read_csv(r"/media/hamed/NSSR Dataset/nchsdb/health_data/SLEEP_STUDY.csv")
     age_dict = dict(zip(age.SLEEP_STUDY_ID, age.AGE_AT_SLEEP_STUDY_DAYS / 365))
     root_dir = os.path.expanduser(path)
 
@@ -94,10 +95,9 @@ def load_data(path):
                 labels_apnea = labels_apnea[samples]
                 labels_hypopnea = labels_hypopnea[samples]
 
-                data = np.zeros((signals.inp_dim[0], EPOCH_DURATION * FREQ, s_count + 3))
-                for i in range(signals.inp_dim[0]):  # for each epoch
-                    # data[i, :len(demo_arr), -1] = demo_arr TODO
-                    data[i, :, -2], data[i, :, -3] = extract_rri(signals[i, ECG_SIG, :], FREQ, float(EPOCH_DURATION))
+                data = np.zeros((signals.shape[0], EPOCH_DURATION * FREQ, s_count + 2))
+                for i in range(signals.shape[0]):  # for each epoch
+                    data[i, :, -1], data[i, :, -2] = extract_rri(signals[i, ECG_SIG, :], FREQ, float(EPOCH_DURATION))
                     for j in range(s_count):  # for each signal
                         data[i, :, j] = resample(signals[i, SIGS[j], :], EPOCH_DURATION * FREQ)
 
@@ -116,4 +116,4 @@ def load_data(path):
 
 
 if __name__ == "__main__":
-    x, y_apnea, y_hypopnea = load_data(PATH)
+    load_data(PATH)
