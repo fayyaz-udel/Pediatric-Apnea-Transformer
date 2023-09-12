@@ -158,7 +158,11 @@ def load_data(m_list, x_train, x_test, miss_ratio, noise_ratio, noise_chance, mi
     ###############################################################
     if return_data:
         if x_train is not None:
+            # for i in [0, 1, 3, 4, 5, 7, 8]:
+            #     x_train[:, :, i] = normalize(x_train[:, :, i])
             x_train = x_train[:, :, [0, 1, 3, 4, 5, 7, 8]]
+        # for i in [0, 1, 3, 4, 5, 7, 8]:
+        #     x_test[:, :, i] = normalize(x_test[:, :, i])
         x_test = x_test[:, :, [0, 1, 3, 4, 5, 7, 8]]
 
         return normalize(x_train), normalize(x_test)
@@ -224,13 +228,6 @@ def add_noise_to_data(data, target_snr_db, noise_chance):
 
 
 ########################################################################################################################
-
-# def get_augmentation_model():
-#     models = keras.Sequential(
-#         [layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),],
-#         name="data_augmentation",
-#     )
-#     return models
 
 
 def transform2freq(x, idx):
