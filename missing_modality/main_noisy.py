@@ -25,10 +25,10 @@ if __name__ == "__main__":
 
 
 
-    for data_name in [('nch',"/home/hamed/d/nch_30x64_")]: #('chat',"/home/hamedcan/dd/chat_b_30x64__",),
+    for data_name in [('chat',"/home/hamed/dd/chat_b_30x64_")]: #,('nch',"/home/hamed/d/nch_30x64_")
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
-        for model_name in ['qaf']:
+        for model_name in ['cnn', 'cnn-lstm', 'Transformer', 'qaf']:
             if model_name == "qaf":
                 config["STEP"] = 'multimodal'
             else:
@@ -40,6 +40,6 @@ if __name__ == "__main__":
                 result = train_test(config)
                 out_str = data_name[0] + ", " + model_name + ",  " + str(noise_ratio) + ", "
                 out_str += str("AUROC: %.1f, %.1f" % (np.mean(result.auroc_list), np.std(result.auroc_list))) + " \n"
-                f = open("./result/noisy.txt", "a")
+                f = open("./result/noisy_chat.txt", "a")
                 f.write(out_str)
                 f.close()

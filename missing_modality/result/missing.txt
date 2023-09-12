@@ -31,3 +31,20 @@ nch, qaf, 0.4, 89.8, 0.5
 nch, qaf, 0.5, 88.1, 0.6
 [92.8, 92.1, 91.1, 89.8, 88.1]
 [0.5, 0.4, 0.5, 0.5, 0.6]
+
+### CHAT ###
+chat, cnn, 0.1, AUROC: 67.9, 6.9 
+chat, cnn, 0.2, AUROC: 64.8, 4.8 
+chat, cnn, 0.3, AUROC: 62.4, 3.1 
+chat, cnn, 0.4, AUROC: 59.9, 2.4 
+chat, cnn, 0.5, AUROC: 58.1, 1.8 
+chat, cnn-lstm, 0.1, AUROC: 54.5, 7.7 
+chat, cnn-lstm, 0.2, AUROC: 53.7, 5.9 
+chat, cnn-lstm, 0.3, AUROC: 52.9, 4.3 
+chat, cnn-lstm, 0.4, AUROC: 52.2, 3.3 
+chat, cnn-lstm, 0.5, AUROC: 51.5, 2.2 
+chat, Transformer, 0.1, AUROC: 82.4, 3.2 
+chat, Transformer, 0.2, AUROC: 79.4, 3.0 
+chat, Transformer, 0.3, AUROC: 76.3, 2.6 
+chat, Transformer, 0.4, AUROC: 73.2, 2.1 
+chat, Transformer, 0.5, AUROC: 69.8, 2.0 
