@@ -8,7 +8,7 @@ if __name__ == "__main__":
         "BATCH_SIZE": 256,
         "MODALS": ["eog", "eeg", "resp", "spo2", "ecg", "co2"],
         "NOISE_CHANCE": 0.25,
-        "FOLDS": [0,1,2,3,4],
+        "FOLDS": [0,4],
         "PHASE": "TEST",
         ########################################################
         "transformer_layers": 5,  # best 5
@@ -23,10 +23,10 @@ if __name__ == "__main__":
 
 
 
-    for data_name in [ ('nch',"/home/hamed/d/nch_30x64_")]: #('chat',"/home/hamedcan/dd/chat_b_30x64__",),
+    for data_name in [ ('chat',"/home/hamed/dd/chat_b_30x64_")]: #('chat',"/home/hamedcan/dd/chat_b_30x64__",),
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
-        for model_name in ['cnn','Transformer','qaf']:
+        for model_name in ['qaf']:
             if model_name == "qaf":
                 config["STEP"] = 'multimodal'
             else:
@@ -39,7 +39,7 @@ if __name__ == "__main__":
                     config["NOISE_RATIO"] = noise_ratio
                     result = train_test(config)
                     out_str = data_name[0] + ", " + model_name + ", " + str(miss_ratio) + ", " + str(noise_ratio) + ", "
-                    out_str += str("%.1f, %.1f" % (np.mean(result.auroc_list), np.std(result.auroc_list))) + " \n"
-                    f = open("./result/miss_noise.txt", "a")
+                    out_str += str("%.1f (%.1f)" % (np.mean(result.auroc_list), np.std(result.auroc_list))) + " \n"
+                    f = open("./result/miss_noise_chat.txt", "a")
                     f.write(out_str)
                     f.close()

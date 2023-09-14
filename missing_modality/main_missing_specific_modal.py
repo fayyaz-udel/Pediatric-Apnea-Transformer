@@ -27,7 +27,7 @@ if __name__ == "__main__":
         "channels": [0, 3, 5, 6, 9, 10, 4],
     }
 
-    for data_name in [('nch', "/home/hamed/d/nch_30x64_")]: # ,('chat', "/home/hamedcan/dd/chat_b_30x64__",)
+    for data_name in [('chat', "/home/hamed/dd/chat_b_30x64_")]: # ,('chat', "/home/hamedcan/dd/chat_b_30x64__",)
         config["DATA_NAME"] = data_name[0]
         config["DATA_PATH"] = data_name[1]
         for model_name in ['cnn', 'cnn-lstm', 'Transformer', 'qaf']:
@@ -42,8 +42,8 @@ if __name__ == "__main__":
 
                 result = train_test(config)
                 out_str = data_name[0] + ", " + model_name + ", " + str(miss_indexes) + ", "
-                out_str += str("AUROC: %.1f, %.1f" % (np.mean(result.auroc_list), np.std(result.auroc_list))) + " \n"
-                f = open("./result/missing_modal.txt", "a")
+                out_str += str("%.1f, %.1f" % (np.mean(result.auroc_list), np.std(result.auroc_list))) + " \n"
+                f = open("./result/missing_modal_chat.txt", "a")
                 f.write(out_str)
                 f.close()
 
